@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O'Mba'p Lounge — Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0e1b1c;
+    --bg-raised: #142627;
+    --gold: #f2b705;
+    --ember: #e2572b;
+    --cream: #f4ede1;
+    --cream-dim: #cfc6b8;
+    --line: rgba(244,237,225,0.14);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--cream);
+    font-family:'Work Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Fraunces', serif; margin:0;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:48px 22px 28px;
+    text-align:center;
+    background:
+      radial-gradient(ellipse at top, rgba(242,183,5,0.10), transparent 60%),
+      var(--bg);
+    border-bottom:1px solid var(--line);
+  }
+  .hero .mark{
+    font-size:15px;
+    letter-spacing:0.3em;
+    color:var(--gold);
+  }
+  .hero h1{
+    font-size:44px;
+    font-weight:700;
+    color:var(--cream);
+    margin:6px 0 4px;
+  }
+  .hero h1 span{color:var(--gold);}
+  .hero .tag{
+    color:var(--cream-dim);
+    font-size:14px;
+    letter-spacing:0.08em;
+  }
+  .hero .loc{
+    margin-top:14px;
+    font-size:13px;
+    color:var(--cream-dim);
+  }
+
+  /* ---------- STICKY NAV ---------- */
+  .catnav-wrap{
+    position:sticky;
+    top:0;
+    z-index:20;
+    background:rgba(14,27,28,0.96);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .catnav{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:12px 16px;
+    scrollbar-width:none;
+  }
+  .catnav::-webkit-scrollbar{display:none;}
+  .catnav a{
+    flex:0 0 auto;
+    color:var(--cream-dim);
+    text-decoration:none;
+    font-size:13px;
+    padding:8px 14px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .catnav a:active, .catnav a.active{
+    color:var(--bg);
+    background:var(--gold);
+    border-color:var(--gold);
+  }
+
+  /* ---------- SECTIONS ---------- */
+  main{max-width:760px; margin:0 auto; padding:8px 18px 100px;}
+  section{padding:38px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  .sec-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  .sec-head h2{font-size:26px; color:var(--cream); font-weight:600;}
+  .sec-head .price-banner{
+    font-size:13px;
+    color:var(--gold);
+    white-space:nowrap;
+    font-family:'Work Sans', sans-serif;
+    font-weight:600;
+  }
+  .sub-label{
+    font-size:12px;
+    color:var(--ember);
+    text-transform:uppercase;
+    letter-spacing:0.09em;
+    margin:22px 0 10px;
+  }
+  .sub-label:first-child{margin-top:0;}
+
+  .item{
+    padding:12px 0;
+    border-bottom:1px dashed var(--line);
+  }
+  .item:last-child{border-bottom:none;}
+  .item-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:14px;
+  }
+  .item-row .name{
+    font-size:16px;
+    font-weight:500;
+    color:var(--cream);
+  }
+  .item-row .price{
+    font-size:15px;
+    font-weight:600;
+    color:var(--gold);
+    white-space:nowrap;
+  }
+  .item .desc{
+    margin-top:3px;
+    font-size:13px;
+    color:var(--cream-dim);
+    line-height:1.4;
+  }
+
+  /* Simple flat list (sauces) */
+  .flat-list{
+    display:flex; flex-wrap:wrap; gap:10px 22px;
+    list-style:none; padding:0; margin:0;
+  }
+  .flat-list li{
+    font-size:15px;
+    color:var(--cream);
+    position:relative;
+    padding-left:14px;
+  }
+  .flat-list li::before{
+    content:"—";
+    position:absolute; left:0; color:var(--ember);
+  }
+
+  /* Formule table box */
+  .formule{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:20px;
+    background:var(--bg-raised);
+  }
+  .formule .when{color:var(--cream-dim); font-size:13px; margin-bottom:14px;}
+  .menu-option{margin-bottom:16px;}
+  .menu-option:last-child{margin-bottom:0;}
+  .menu-option .opt-label{
+    font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--ember); margin-bottom:6px;
+  }
+  .menu-option .courses{color:var(--cream); font-size:15px; line-height:1.6;}
+  .formule .foot{
+    margin-top:16px; padding-top:16px; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;
+  }
+  .formule .foot .price{font-size:20px; font-weight:700; color:var(--gold); font-family:'Fraunces',serif;}
+  .formule .garnitures{font-size:13px; color:var(--cream-dim); margin-top:10px;}
+
+  /* Footer */
+  footer{
+    text-align:center;
+    padding:36px 18px 40px;
+    color:var(--cream-dim);
+    font-size:13px;
+  }
+  footer .fname{color:var(--gold); font-family:'Fraunces',serif; font-size:18px; margin-bottom:8px;}
+  footer .socials{margin-top:10px; font-size:12px; letter-spacing:0.05em;}
+
+  /* WhatsApp floating button */
+  .wa-float{
+    position:fixed;
+    right:18px; bottom:18px;
+    background:#25D366;
+    color:#fff;
+    width:56px; height:56px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 18px rgba(0,0,0,0.35);
+    z-index:30;
+    text-decoration:none;
+  }
+  .wa-float svg{width:28px; height:28px;}
+
+  @media (min-width:640px){
+    .hero h1{font-size:56px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="mark">EAT · DRINK · DANCE · REST</div>
+  <h1>O'Mba'p <span>Lounge</span></h1>
+  <div class="tag">Restaurant · Hébergement · Rooftop · Grill · Pizzeria</div>
+  <div class="loc">Mini Prix Bastos, Yaoundé — +237 686 868 630</div>
+</div>
+
+<div class="catnav-wrap">
+  <nav class="catnav" id="catnav">
+    <a href="#petit-dej">Petits-déj</a>
+    <a href="#table">La Table</a>
+    <a href="#salades">Salades</a>
+    <a href="#sandwichs">Sandwichs</a>
+    <a href="#aperitifs">Apéritifs</a>
+    <a href="#volailles">Volailles</a>
+    <a href="#viandes">Viandes</a>
+    <a href="#poissons">Poissons</a>
+    <a href="#pates">Pâtes</a>
+    <a href="#pizzas">Pizzas</a>
+    <a href="#burgers">Burgers</a>
+    <a href="#sauces">Sauces</a>
+    <a href="#desserts">Desserts</a>
+    <a href="#glaces">Glaces &amp; Milkshakes</a>
+    <a href="#boissons">Boissons</a>
+    <a href="#vins">Vins</a>
+    <a href="#champagnes">Champagnes</a>
+    <a href="#whiskys">Whiskys</a>
+    <a href="#cocktails">Cocktails</a>
+  </nav>
+</div>
+
+<main>
+
+  <section id="petit-dej">
+    <div class="sec-head"><h2>Nos petits-déjeuners</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Petit-déjeuner Simple</span><span class="price">4 000 FCFA</span></div><div class="desc">Omelette simple, pain, boisson chaude.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Petit-déjeuner Continental</span><span class="price">5 000 FCFA</span></div><div class="desc">Omelette garnie, pain, boisson chaude, salade.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Petit-déjeuner Français</span><span class="price">6 000 FCFA</span></div><div class="desc">Omelette, boisson chaude, viennoiserie, jus naturel au choix.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Petit-déjeuner Américain</span><span class="price">7 000 FCFA</span></div><div class="desc">Omelette, boisson chaude, céréales, lait, assiette de fruits, confiture, yaourt, nems chinoises.</div></div>
+  </section>
+
+  <section id="table">
+    <div class="sec-head"><h2>The O'Mba'p Table</h2><span class="price-banner">Lun–Ven, 12h30–17h</span></div>
+    <div class="formule">
+      <div class="menu-option">
+        <div class="opt-label">Menu 1</div>
+        <div class="courses">Salade Fraîcheur · Bœuf Stroganoff · Coupe de fruits de saison</div>
+      </div>
+      <div class="menu-option">
+        <div class="opt-label">Menu 2</div>
+        <div class="courses">Salade Folle · Carpe en Papillote · Crêpes natures</div>
+      </div>
+      <div class="garnitures">Garnitures : plantains frits, riz parfumé aux feuilles de laurier, pommes rissolées. Offert : une bouteille d'eau.</div>
+      <div class="foot">
+        <span>Le menu, au choix</span>
+        <span class="price">10 000 FCFA</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="salades">
+    <div class="sec-head"><h2>Nos salades</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Salade Composée</span><span class="price">5 000 FCFA</span></div><div class="desc">Salade, carotte, oignon, œuf, poulet/thon.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Salade Fattouch</span><span class="price">5 000 FCFA</span></div><div class="desc">Laitue, tomates, concombre, oignons, persil, jus de citron.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Salade Italienne</span><span class="price">6 000 FCFA</span></div><div class="desc">Pâtes aux 3 couleurs, tomates sierra, olives noires.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Salade Avocat-Crevettes</span><span class="price">6 500 FCFA</span></div><div class="desc">Laitue, avocat, crevettes, tomates.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Salade César</span><span class="price">8 000 FCFA</span></div><div class="desc">Laitue, croûtons, œuf, poulet, tomates, parmesan.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Salade Mexicaine</span><span class="price">8 000 FCFA</span></div><div class="desc">Salade, carottes, maïs doux, haricot rouge.</div></div>
+  </section>
+
+  <section id="sandwichs">
+    <div class="sec-head"><h2>Nos sandwichs</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Shawarma Poulet / Viande</span><span class="price">4 000 FCFA</span></div><div class="desc">Poulet ou viande, tomate, salade, oignons.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Sandwich Fajita</span><span class="price">5 000 FCFA</span></div><div class="desc">Poulet, oignons, poivrons, champignons, maïs, fromage, sauce soja.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Sandwich Philadelphia</span><span class="price">5 000 FCFA</span></div><div class="desc">Viande, oignons, poivrons, champignons, maïs, fromage, sauce à l'avocat, mayonnaise.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Sandwich Kafta</span><span class="price">5 000 FCFA</span></div><div class="desc">Viande hachée, tomate grillée, cornichons, oignons, pois chiches.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Club Sandwich Avocat &amp; Thon</span><span class="price">5 000 FCFA</span></div><div class="desc">Salade, tomates, œuf, avocat, maïs, thon.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Poulet désossé</span><span class="price">6 000 FCFA</span></div><div class="desc">Morceaux de poulet désossés, frites, salade, sauce barbecue.</div></div>
+  </section>
+
+  <section id="aperitifs">
+    <div class="sec-head"><h2>Nos apéritifs</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Nems chinoises</span><span class="price">5 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Samoussas</span><span class="price">5 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Quesadilla au poulet</span><span class="price">6 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Ailes de poulet</span><span class="price">6 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Beignets de crevettes croustillants (tempura)</span><span class="price">6 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Goujonnettes de poulet</span><span class="price">6 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Tacos viande ou poulet</span><span class="price">6 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Calamars frits</span><span class="price">8 000 FCFA</span></div></div>
+  </section>
+
+  <section id="volailles">
+    <div class="sec-head"><h2>Nos volailles</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Quart de poulet</span><span class="price">6 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Blanc de poulet</span><span class="price">6 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Ailes de poulet</span><span class="price">6 500 FCFA</span></div><div class="desc">Braisé ou pané.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Cuisses de poulet</span><span class="price">7 500 FCFA</span></div><div class="desc">Braisé ou pané.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Cordon Bleu</span><span class="price">8 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Demi-poulet</span><span class="price">10 000 FCFA</span></div><div class="desc">Braisé ou pané.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Poulet DG (demi)</span><span class="price">12 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Canard braisé (entier)</span><span class="price">22 000 FCFA</span></div></div>
+  </section>
+
+  <section id="viandes">
+    <div class="sec-head"><h2>Nos viandes</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Brochettes de viande</span><span class="price">6 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Brochettes de porc</span><span class="price">6 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Brochettes de rognon</span><span class="price">6 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Brochettes de gésiers</span><span class="price">6 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Bouillon de queue de bœuf</span><span class="price">6 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Fajitas (assaisonnées)</span><span class="price">7 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Assortiment de côtelettes d'agneau</span><span class="price">14 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Mix côte d'agneau</span><span class="price">14 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Assortiment de trois saucisses de viande</span><span class="price">8 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Assortiment de trois saucisses de porc</span><span class="price">8 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Trio saucisses de viande</span><span class="price">8 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Trio saucisses de porc</span><span class="price">8 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Steak</span><span class="price">8 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Petite grillade mixte</span><span class="price">18 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Grillade mixte terre et mer</span><span class="price">30 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Grande grillade mixte</span><span class="price">40 000 FCFA</span></div><div class="desc">Bœuf, brochettes de poulet, saucisses, merguez, rognons, gésiers.</div></div>
+  </section>
+
+  <section id="poissons">
+    <div class="sec-head"><h2>Nos poissons</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Brochettes de capitaine</span><span class="price">6 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Crevettes sautées à l'ail</span><span class="price">6 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Goujonnettes de poisson panés</span><span class="price">6 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Pavé de capitaine</span><span class="price">7 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Moyenne Carpe braisée</span><span class="price">10 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Poisson en croûte de sel</span><span class="price">18 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Moyen Bar braisé</span><span class="price">12 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Carpe grillée moyenne avec sauce</span><span class="price">12 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Sole moyenne</span><span class="price">13 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Grande Carpe Braisée/Sauce</span><span class="price">13 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Trio de gambas</span><span class="price">15 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Grand Bar Braisé/Sauce</span><span class="price">15 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Grande sole</span><span class="price">18 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Roulade de sole</span><span class="price">18 500 FCFA</span></div></div>
+  </section>
+
+  <section id="pates">
+    <div class="sec-head"><h2>Nos pâtes</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Penne Arrabiata</span><span class="price">5 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Penne au Pesto</span><span class="price">6 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Lasagne Italienne</span><span class="price">7 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Spaghetti Bolognaise</span><span class="price">8 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Tagliatelles Carbonara</span><span class="price">9 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Linguine au Saumon</span><span class="price">10 000 FCFA</span></div></div>
+  </section>
+
+  <section id="pizzas">
+    <div class="sec-head"><h2>Nos pizzas</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Pizza margherita</span><span class="price">7 500 FCFA</span></div><div class="desc">Tomate, fromage, basilic, origan.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pizza végétarienne</span><span class="price">8 500 FCFA</span></div><div class="desc">Maïs, champignons, olives noires, courgettes, oignon, tomate.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pizza italienne</span><span class="price">10 000 FCFA</span></div><div class="desc">Tomate, jambon, fromage.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pizza orientale</span><span class="price">10 000 FCFA</span></div><div class="desc">Tomate, viande hachée, oignon, poivrons jaunes et verts.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pizza 4 fromages</span><span class="price">10 000 FCFA</span></div><div class="desc">Emmental, mozzarella, blue cheese, mimolette.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pizza tropicale</span><span class="price">11 000 FCFA</span></div><div class="desc">Tomate, origan, fromage, pepperoni.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pizza attuti</span><span class="price">11 000 FCFA</span></div><div class="desc">Tomate, poulet, champignons, poivrons, sauce barbecue.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pizza carbonara</span><span class="price">12 000 FCFA</span></div><div class="desc">Tomate, crème, poulet émincé.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pizza O'Mbap</span><span class="price">12 000 FCFA</span></div><div class="desc">Poulet, viande hachée, bacon, olives noires, fromage.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pizza relax</span><span class="price">13 000 FCFA</span></div><div class="desc">Calamars, moules, crevettes, tomate, oignon, basilic.</div></div>
+  </section>
+
+  <section id="burgers">
+    <div class="sec-head"><h2>Nos burgers</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Classic Burger</span><span class="price">5 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Cheese Burger</span><span class="price">7 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Double Burger</span><span class="price">8 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Burger au Porc</span><span class="price">8 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Chicken Burger</span><span class="price">8 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">O'Mba'p Burger</span><span class="price">10 000 FCFA</span></div></div>
+  </section>
+
+  <section id="sauces">
+    <div class="sec-head"><h2>Nos sauces</h2></div>
+    <ul class="flat-list">
+      <li>Sauce tartare</li>
+      <li>Sauce au vin</li>
+      <li>Tomates concassées au basilic</li>
+      <li>Rôti</li>
+      <li>Sauce basquaise</li>
+      <li>Sauce yassa</li>
+      <li>Sauce crémeuse aux poivres verts</li>
+      <li>Sauce crémeuse aux champignons</li>
+    </ul>
+  </section>
+
+  <section id="desserts">
+    <div class="sec-head"><h2>Nos desserts</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Coconut Crêpe</span><span class="price">2 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Banana Split</span><span class="price">3 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Mousse au chocolat</span><span class="price">4 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Forêt Noire</span><span class="price">4 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Cheesecake</span><span class="price">5 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Tiramisu</span><span class="price">5 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Crêpe nature</span><span class="price">5 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Fondant au Chocolat</span><span class="price">5 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Crêpes extra fraise</span><span class="price">5 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Moka Caramel</span><span class="price">5 000 FCFA</span></div></div>
+  </section>
+
+  <section id="glaces">
+    <div class="sec-head"><h2>Glaces &amp; milkshakes</h2></div>
+    <div class="sub-label">Glaces</div>
+    <div class="item"><div class="item-row"><span class="name">Boule de glace</span><span class="price">2 000 FCFA</span></div><div class="desc">Vanille et chocolat, Tiramisu, Fraise, Caramel, Café.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Coupe de glace maison</span><span class="price">5 000 FCFA</span></div><div class="desc">Dame Blanche, Pêche Melba.</div></div>
+    <div class="sub-label">Milkshakes — 8 000 FCFA</div>
+    <div class="item"><div class="item-row"><span class="name">Milkshake Vanille</span></div><div class="desc">Glace vanille, lait demi-écrémé, crème fraîche, sirop de vanille, chantilly, vermicelles.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Milkshake Chocolat</span></div><div class="desc">Glace chocolat, lait demi-écrémé, coulis au chocolat, chantilly, vermicelles.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Milkshake Fraise</span></div><div class="desc">Glace fraise, lait demi-écrémé, chantilly, vermicelles.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Milkshake Framboise</span></div><div class="desc">Glace framboise, lait demi-écrémé, chantilly, vermicelles.</div></div>
+  </section>
+
+  <section id="boissons">
+    <div class="sec-head"><h2>Nos boissons</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Bières</span><span class="price">3 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Sodas</span><span class="price">2 500 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Eau</span><span class="price">2 000 FCFA</span></div></div>
+  </section>
+
+  <section id="vins">
+    <div class="sec-head"><h2>Nos vins</h2></div>
+    <div class="sub-label">Vins rouges</div>
+    <div class="item"><div class="item-row"><span class="name">La Petite Sirène</span><span class="price">30 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Mouton Cadet Bordeaux Rouge</span><span class="price">35 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">St. Emilion</span><span class="price">45 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Château Barreyrs</span><span class="price">45 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Château Ferand</span><span class="price">45 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Château d'Arcin</span><span class="price">45 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Haut Médoc de Giscours</span><span class="price">45 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">La Fiole du Pape Côtes du Rhône</span><span class="price">65 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">La Sirène Giscours</span><span class="price">80 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Château Giscours Margaux</span><span class="price">130 000 FCFA</span></div></div>
+
+    <div class="sub-label">Vins blancs</div>
+    <div class="item"><div class="item-row"><span class="name">Riesling</span><span class="price">30 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Chardonnay</span><span class="price">30 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Gewurztraminer</span><span class="price">35 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Sauternes</span><span class="price">35 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Sancerre</span><span class="price">35 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Mouton Cadet</span><span class="price">35 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Chablis</span><span class="price">40 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Monbazillac</span><span class="price">45 000 FCFA</span></div></div>
+
+    <div class="sub-label">Vins rosés</div>
+    <div class="item"><div class="item-row"><span class="name">Cabernet d'Anjou</span><span class="price">30 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Côtes de Provence</span><span class="price">30 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">GB. Gris Blanc</span><span class="price">35 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Whispering Angel Rosé</span><span class="price">45 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Santero Muscato</span><span class="price">45 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Lucbelair</span><span class="price">80 000 FCFA</span></div></div>
+
+    <div class="sub-label">Vins mousseux</div>
+    <div class="item"><div class="item-row"><span class="name">Martini Asti</span><span class="price">35 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Martini Rosé</span><span class="price">35 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Martini Prosecco</span><span class="price">35 000 FCFA</span></div></div>
+
+    <div class="item" style="margin-top:6px;"><div class="item-row"><span class="name">Verre de vin (rouge/blanc/sec/moelleux)</span><span class="price">10 000 FCFA</span></div></div>
+  </section>
+
+  <section id="champagnes">
+    <div class="sec-head"><h2>Nos champagnes</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Moët &amp; Chandon Impérial Brut</span><span class="price">80 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Moët &amp; Chandon Impérial Brut Rosé</span><span class="price">90 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Moët &amp; Chandon Impérial Nectar</span><span class="price">110 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Veuve Clicquot</span><span class="price">120 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Ruinart Brut</span><span class="price">120 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Moët &amp; Chandon Impérial Nectar Rosé</span><span class="price">120 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Veuve Clicquot Rich</span><span class="price">130 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Ruinart Blanc de Blancs</span><span class="price">150 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Dom Pérignon</span><span class="price">280 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Cristal – Louis Roederer</span><span class="price">350 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Armand de Brignac</span><span class="price">550 000 FCFA</span></div></div>
+  </section>
+
+  <section id="whiskys">
+    <div class="sec-head"><h2>Nos whiskys</h2></div>
+    <div class="item"><div class="item-row"><span class="name">Glenmorangie 10 ans</span><span class="price">55 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Chivas Regal 12 ans</span><span class="price">60 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Black 12 ans</span><span class="price">60 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Jack Daniel's</span><span class="price">60 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Jack Daniel's Honey</span><span class="price">60 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Monkey Shoulder</span><span class="price">60 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Glenfiddich 12 ans</span><span class="price">70 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Singleton</span><span class="price">70 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Cardhu</span><span class="price">80 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Jack Daniel's Single Barrel</span><span class="price">80 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Johnnie Walker Black Label</span><span class="price">80 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Glenmorangie 12 ans – Lasanta</span><span class="price">80 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Glenfiddich 15 ans</span><span class="price">100 000 FCFA</span></div></div>
+    <div class="item"><div class="item-row"><span class="name">Johnnie Walker Gold Label</span><span class="price">100 000 FCFA</span></div></div>
+  </section>
+
+  <section id="cocktails">
+    <div class="sec-head"><h2>Nos cocktails</h2></div>
+
+    <div class="sub-label">Cocktails alcoolisés — 7 000 à 8 000 FCFA</div>
+    <div class="item"><div class="item-row"><span class="name">Margarita</span><span class="price">7 000 FCFA</span></div><div class="desc">Tequila, Cointreau, citron vert.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Tequila Sunrise</span><span class="price">7 000 FCFA</span></div><div class="desc">Tequila, orange, grenadine.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Caipirinha</span><span class="price">7 000 FCFA</span></div><div class="desc">Rhum cachaça, citron, sucre de canne, eau gazeuse.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Piña Colada</span><span class="price">7 000 FCFA</span></div><div class="desc">Rhum blanc, lait de coco, jus d'ananas, sucre de canne, crème fraîche.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Lagon Bleu</span><span class="price">7 000 FCFA</span></div><div class="desc">Vodka, curaçao, triple sec, citron.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Mojito</span><span class="price">7 000 FCFA</span></div><div class="desc">Rhum blanc, citron, feuilles de menthe, sucre de canne, eau gazeuse, glaçons pilés.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Blue Hawaïen</span><span class="price">8 000 FCFA</span></div><div class="desc">Rhum, curaçao bleu, ananas, lait de coco.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pink Lady</span><span class="price">8 000 FCFA</span></div><div class="desc">Gin, citron, blanc d'œuf, lait, grenadine.</div></div>
+    <div class="item"><div class="item-row"><span class="name">TGV</span><span class="price">8 000 FCFA</span></div><div class="desc">Tequila, triple sec, gin, vodka.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Porn Star Martini</span><span class="price">8 000 FCFA</span></div><div class="desc">Vodka, vanille, passion, citron, vin mousseux.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Elektrik Ice Tea</span><span class="price">8 000 FCFA</span></div><div class="desc">Vodka, tequila, rhum, gin, curaçao bleu, triple sec, citron, Sprite.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Long Island Ice Tea</span><span class="price">8 000 FCFA</span></div><div class="desc">Vodka, rhum, tequila, gin, triple sec, jus de citron, Coca-Cola.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Maï Taï</span><span class="price">8 000 FCFA</span></div><div class="desc">Rhum blanc, rhum ambré, sirop d'orgeat, triple sec, citron, angostura bitters.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Sexe on the Beach</span><span class="price">8 000 FCFA</span></div><div class="desc">Vodka, jus d'orange, liqueur de pêche, jus de cranberry, sirop de grenadine.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Negroni</span><span class="price">8 000 FCFA</span></div><div class="desc">Gin, Campari, Martini Rosso.</div></div>
+
+    <div class="sub-label">Créations du barman — 9 000 FCFA</div>
+    <div class="item"><div class="item-row"><span class="name">Madrina</span></div><div class="desc">Rhum, Malibu, vodka, citron, sucre de canne.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Yaoundé Sling</span></div><div class="desc">Rhum, vodka, gin, tequila, cognac, Get 31, sucre de canne (option café noir).</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pikantis Ginger</span></div><div class="desc">Gin, sirop de gingembre, citron, pêche, orgeat, Tabasco.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Cocaïna Blue</span></div><div class="desc">Vodka, curaçao bleu, tequila, citron, Sprite.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Purple Mermaid</span></div><div class="desc">Vodka, curaçao bleu, citron, grenadine.</div></div>
+
+    <div class="sub-label">Cocktails au vin — 12 000 FCFA</div>
+    <div class="item"><div class="item-row"><span class="name">Kir Impérial</span></div><div class="desc">Vin blanc, triple sec, crème de cassis.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Mon Chéri</span></div><div class="desc">Vin blanc, orange, Cointreau.</div></div>
+    <div class="item"><div class="item-row"><span class="name">O'Mbap Red Carpet</span></div><div class="desc">Vin blanc, gin, Sprite, grenadine.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Spritz</span></div><div class="desc">Vin blanc, Campari, Sprite.</div></div>
+
+    <div class="sub-label">Cocktails au champagne — 15 000 FCFA</div>
+    <div class="item"><div class="item-row"><span class="name">Kir Royal</span></div><div class="desc">Champagne, crème de cassis.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Bleu Champagne</span></div><div class="desc">Champagne, curaçao bleu, vodka, citron.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Royal Mojito</span></div><div class="desc">Champagne, feuilles de menthe, citron, rhum, sucre.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Champagne Cocktail</span></div><div class="desc">Champagne, cognac, sucre roux, angostura bitters.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Mimosa</span></div><div class="desc">Champagne, orange, Grand Marnier.</div></div>
+    <div class="item"><div class="item-row"><span class="name">O'Mbap Diamond</span></div><div class="desc">Champagne, Cointreau, cognac, orange.</div></div>
+
+    <div class="sub-label">Shooters &amp; aphrodisiaques — 3 000 FCFA</div>
+    <div class="item"><div class="item-row"><span class="name">B52</span></div><div class="desc">Baileys, Cointreau, Kahlúa.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Orgasme</span></div><div class="desc">Baileys, tequila, Get 27.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Kiss Cool</span></div><div class="desc">Curaçao bleu, Get 31, vodka.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Kamikaze</span></div><div class="desc">Vodka, citron (triple sec / Cointreau / Grand Marnier).</div></div>
+    <div class="item"><div class="item-row"><span class="name">Tequila Piaf (Shoot Gun)</span></div><div class="desc">Tequila, morceaux de citron, sel fin, tonic.</div></div>
+
+    <div class="sub-label">Cocktails sans alcool — 6 000 FCFA</div>
+    <div class="item"><div class="item-row"><span class="name">Virgin Colada</span></div><div class="desc">Lait de coco, ananas, sucre.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Virgin Mojito</span></div><div class="desc">Feuilles de menthe, sucre de canne, citron, eau gazeuse.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Pussy Foot</span></div><div class="desc">Orange, ananas, jaune d'œuf, citron, grenadine.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Bora Bora</span></div><div class="desc">Ananas, passion, citron, grenadine.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Rose d'Été</span></div><div class="desc">Papaye, pastèque, mangue, citron, sirop de fraise.</div></div>
+    <div class="item"><div class="item-row"><span class="name">All Attitude</span></div><div class="desc">Ananas, gingembre, citron, framboise.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Relaxe Guava Drink</span></div><div class="desc">Ananas, orange, lait, pêche, grenadine.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Cassis Juice</span></div><div class="desc">Orange, ananas, citron, pêche, sirop de cassis.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Bella Luna</span></div><div class="desc">Orange, ananas, citron, grenadine.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Menthe au Lait</span><span class="price">4 000 FCFA</span></div><div class="desc">Lait demi-écrémé, sirop de menthe.</div></div>
+    <div class="item"><div class="item-row"><span class="name">Diabolo Menthe</span></div><div class="desc">Sirop de menthe, Sprite, citron.</div></div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="fname">O'Mba'p Lounge</div>
+  <div>Mini Prix Bastos, Yaoundé</div>
+  <div>+237 686 868 630 · contact@ombaplounge.org</div>
+  <div class="socials">Facebook · Instagram · TikTok — O'Mba'p Lounge</div>
+</footer>
+
+<a class="wa-float" href="https://wa.me/237686868630?text=Bonjour%2C%20je%20souhaite%20passer%20une%20commande%20%C3%A0%20O%27Mba%27p%20Lounge" target="_blank" rel="noopener" aria-label="Commander sur WhatsApp">
+  <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12.001 2C6.478 2 2 6.477 2 12c0 1.876.514 3.632 1.408 5.13L2 22l5.02-1.376A9.94 9.94 0 0 0 12.001 22C17.523 22 22 17.523 22 12S17.523 2 12.001 2zm0 18.09c-1.66 0-3.212-.487-4.514-1.324l-.324-.204-3.24.888.867-3.156-.211-.324A8.09 8.09 0 0 1 3.91 12c0-4.465 3.626-8.091 8.091-8.091 4.464 0 8.09 3.626 8.09 8.09 0 4.465-3.626 8.091-8.09 8.091z"/></svg>
+</a>
+
+<script>
+  // Highlight active category on scroll
+  const links = document.querySelectorAll('#catnav a');
+  const sections = Array.from(links).map(l => document.querySelector(l.getAttribute('href')));
+  const setActive = () => {
+    let idx = 0;
+    const y = window.scrollY + 140;
+    sections.forEach((sec, i) => { if (sec && sec.offsetTop <= y) idx = i; });
+    links.forEach((l, i) => l.classList.toggle('active', i === idx));
+    const active = links[idx];
+    if (active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+  };
+  window.addEventListener('scroll', setActive, {passive:true});
+  setActive();
+</script>
+
+</body>
+</html>
