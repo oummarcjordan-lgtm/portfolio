@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O'Mba'p Lounge — Chevalet QR Menu</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  @page { size: A5; margin: 0; }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:#e7e2d8;
+    font-family:'Georgia', serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:20px;
+  }
+  .card{
+    width:400px;
+    max-width:100%;
+    background: radial-gradient(ellipse at top, rgba(242,183,5,0.10), transparent 60%), #0e1b1c;
+    color:#f4ede1;
+    border-radius:14px;
+    padding:34px 28px 30px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,0.25);
+  }
+  .mark{
+    font-size:12px;
+    letter-spacing:0.3em;
+    color:#f2b705;
+    font-family:'Work Sans', Arial, sans-serif;
+    margin-bottom:8px;
+  }
+  h1{
+    font-size:34px;
+    margin:0 0 2px;
+    font-weight:700;
+  }
+  h1 span{color:#f2b705;}
+  .tag{
+    font-size:12px;
+    color:#cfc6b8;
+    font-family:'Work Sans', Arial, sans-serif;
+    letter-spacing:0.04em;
+    margin-bottom:22px;
+  }
+  .qr-box{
+    background:#f4ede1;
+    display:inline-block;
+    padding:16px;
+    border-radius:10px;
+    margin:6px 0 20px;
+  }
+  #qrcode{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .cta{
+    font-size:16px;
+    color:#f4ede1;
+    font-family:'Work Sans', Arial, sans-serif;
+    font-weight:600;
+    margin-bottom:4px;
+  }
+  .sub{
+    font-size:12px;
+    color:#cfc6b8;
+    font-family:'Work Sans', Arial, sans-serif;
+    margin-bottom:18px;
+  }
+  .foot{
+    border-top:1px solid rgba(244,237,225,0.14);
+    padding-top:14px;
+    font-family:'Work Sans', Arial, sans-serif;
+    font-size:12px;
+    color:#cfc6b8;
+  }
+  .no-print{
+    margin-top:18px;
+    text-align:center;
+    font-family:'Work Sans', Arial, sans-serif;
+    font-size:13px;
+    color:#333;
+  }
+  .no-print button{
+    margin-top:10px;
+    padding:10px 20px;
+    background:#0e1b1c;
+    color:#f2b705;
+    border:none;
+    border-radius:8px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  @media print{
+    body{background:#fff; padding:0;}
+    .no-print{display:none;}
+    .card{box-shadow:none;}
+  }
+</style>
+</head>
+<body>
+
+<div>
+  <div class="card">
+    <div class="mark">EAT · DRINK · DANCE · REST</div>
+    <h1>O'Mba'p <span>Lounge</span></h1>
+    <div class="tag">Mini Prix Bastos, Yaoundé</div>
+
+    <div class="qr-box">
+      <div id="qrcode"></div>
+    </div>
+
+    <div class="cta">Scannez pour voir notre menu</div>
+    <div class="sub">Plats · Boissons · Cocktails · Vins</div>
+
+    <div class="foot">+237 686 868 630 · contact@ombaplounge.org</div>
+  </div>
+
+  <div class="no-print">
+    Astuce : utilise "Imprimer" (menu du navigateur) puis "Enregistrer en PDF" pour l'envoyer à l'imprimeur, ou plastifie directement une capture d'écran de la carte ci-dessus.
+    <br>
+    <button onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+  </div>
+</div>
+
+<script>
+  new QRCode(document.getElementById("qrcode"), {
+    text: "https://oummarcjordan-lgtm.github.io/portfolio/omba-p-lounge-menu.html",
+    width: 220,
+    height: 220,
+    colorDark: "#0e1b1c",
+    colorLight: "#f4ede1",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+</script>
+
+</body>
+</html>
