@@ -212,9 +212,112 @@
     text-decoration:none;
   }
   .wa-float svg{width:28px; height:28px;}
+  body.cart-active .wa-float{bottom:84px;}
+
+  /* Add-to-cart buttons */
+  .item-row{position:relative; padding-right:36px;}
+  .add-btn{
+    position:absolute;
+    right:0; top:50%;
+    transform:translateY(-50%);
+    width:26px; height:26px;
+    border-radius:50%;
+    border:1px solid var(--gold);
+    background:transparent;
+    color:var(--gold);
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .add-btn:active{background:var(--gold); color:var(--bg);}
+
+  /* Cart bar */
+  .cart-bar{
+    position:fixed; left:0; right:0; bottom:0;
+    background:var(--gold);
+    color:var(--bg);
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 20px;
+    font-weight:600;
+    font-size:14px;
+    z-index:25;
+    cursor:pointer;
+    box-shadow:0 -4px 14px rgba(0,0,0,0.25);
+  }
+  .cart-bar.hidden{display:none;}
+
+  /* Cart drawer */
+  .cart-drawer{
+    position:fixed; left:0; right:0; bottom:0;
+    max-height:82vh;
+    overflow-y:auto;
+    background:var(--bg-raised);
+    border-top:1px solid var(--line);
+    border-radius:16px 16px 0 0;
+    padding:20px;
+    z-index:40;
+    box-shadow:0 -8px 30px rgba(0,0,0,0.4);
+  }
+  .cart-drawer.hidden{display:none;}
+  .cart-drawer-head{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:14px;
+  }
+  .cart-drawer-head h3{font-size:20px; color:var(--cream);}
+  .close-btn{
+    background:none; border:none; color:var(--cream-dim);
+    font-size:18px; cursor:pointer;
+  }
+  .cart-line{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px dashed var(--line);
+    font-size:14px;
+  }
+  .cart-line .cl-name{flex:1; color:var(--cream);}
+  .cart-line .cl-qty{
+    display:flex; align-items:center; gap:8px;
+    color:var(--cream);
+  }
+  .cart-line .cl-qty button{
+    width:22px; height:22px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--cream);
+    cursor:pointer;
+  }
+  .cart-line .cl-price{color:var(--gold); font-weight:600; white-space:nowrap;}
+  .cart-total-row{
+    display:flex; justify-content:space-between;
+    font-size:17px; font-weight:700;
+    color:var(--cream);
+    padding:14px 0;
+    border-bottom:1px solid var(--line);
+    margin-bottom:14px;
+  }
+  .cart-action{
+    display:block; width:100%;
+    padding:13px;
+    margin-bottom:10px;
+    border:none;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+  }
+  .wa-action{background:#25D366; color:#fff;}
+  .om-action{background:#FF6600; color:#fff;}
+  .momo-action{background:#FFCC00; color:#0e1b1c;}
+  .pay-note{font-size:12px; color:var(--cream-dim); margin:4px 0 12px;}
+  .pay-warning{font-size:11px; color:var(--cream-dim); margin-top:8px; line-height:1.5;}
 
   @media (min-width:640px){
     .hero h1{font-size:56px;}
+    .cart-drawer{max-width:480px; left:auto; right:18px; bottom:18px; border-radius:16px;}
   }
 </style>
 </head>
@@ -590,6 +693,151 @@
 <a class="wa-float" href="https://wa.me/237686868630?text=Bonjour%2C%20je%20souhaite%20passer%20une%20commande%20%C3%A0%20O%27Mba%27p%20Lounge" target="_blank" rel="noopener" aria-label="Commander sur WhatsApp">
   <svg viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12.001 2C6.478 2 2 6.477 2 12c0 1.876.514 3.632 1.408 5.13L2 22l5.02-1.376A9.94 9.94 0 0 0 12.001 22C17.523 22 22 17.523 22 12S17.523 2 12.001 2zm0 18.09c-1.66 0-3.212-.487-4.514-1.324l-.324-.204-3.24.888.867-3.156-.211-.324A8.09 8.09 0 0 1 3.91 12c0-4.465 3.626-8.091 8.091-8.091 4.464 0 8.09 3.626 8.09 8.09 0 4.465-3.626 8.091-8.09 8.091z"/></svg>
 </a>
+
+<div id="cart-bar" class="cart-bar hidden" onclick="toggleCart()">
+  <span id="cart-count">0 article</span>
+  <span id="cart-total">0 FCFA</span>
+</div>
+
+<div id="cart-drawer" class="cart-drawer hidden">
+  <div class="cart-drawer-head">
+    <h3>Votre commande</h3>
+    <button class="close-btn" onclick="toggleCart()" aria-label="Fermer">✕</button>
+  </div>
+  <div id="cart-items"></div>
+  <div class="cart-total-row">
+    <span>Total</span>
+    <span id="cart-total-2">0 FCFA</span>
+  </div>
+  <button id="wa-order-btn" class="cart-action wa-action">Envoyer la commande sur WhatsApp</button>
+  <div class="pay-note">Le code de paiement se compose automatiquement avec le montant exact — il ne reste qu'à appuyer sur l'appel.</div>
+  <button id="pay-om-btn" class="cart-action om-action">Payer avec Orange Money</button>
+  <button id="pay-momo-btn" class="cart-action momo-action">Payer avec MTN MoMo</button>
+  <div class="pay-warning">Après paiement, gardez la confirmation reçue et montrez-la au personnel pour valider votre commande.</div>
+</div>
+
+<script>
+  // ---------- Panier ----------
+  const cart = {};
+  const ORDER_WA_NUMBER = "237686868630";
+
+  function extractPrice(text){
+    if(!text) return null;
+    if(text.indexOf(' à ') !== -1) return null;
+    const m = text.replace(/\u00A0/g,' ').match(/([\d\s]+)\s*FCFA/);
+    if(!m) return null;
+    const num = parseInt(m[1].replace(/\s/g,''), 10);
+    return isNaN(num) ? null : num;
+  }
+
+  function cartTotal(){
+    return Object.values(cart).reduce((s,i)=> s + i.price*i.qty, 0);
+  }
+  function cartCount(){
+    return Object.values(cart).reduce((s,i)=> s + i.qty, 0);
+  }
+
+  function addToCart(name, price){
+    if(!cart[name]) cart[name] = {price, qty:0};
+    cart[name].qty += 1;
+    renderCart();
+  }
+  function changeQty(name, delta){
+    if(!cart[name]) return;
+    cart[name].qty += delta;
+    if(cart[name].qty <= 0) delete cart[name];
+    renderCart();
+  }
+
+  function renderCart(){
+    const count = cartTotal ? cartCount() : 0;
+    const total = cartTotal();
+    document.getElementById('cart-count').textContent = count + (count>1 ? ' articles' : ' article');
+    document.getElementById('cart-total').textContent = total.toLocaleString('fr-FR') + ' FCFA';
+    document.getElementById('cart-total-2').textContent = total.toLocaleString('fr-FR') + ' FCFA';
+
+    const itemsEl = document.getElementById('cart-items');
+    itemsEl.innerHTML = '';
+    Object.entries(cart).forEach(([name, data]) => {
+      const row = document.createElement('div');
+      row.className = 'cart-line';
+      const safeName = name.replace(/'/g, "\\'");
+      row.innerHTML =
+        '<span class="cl-name">'+name+'</span>' +
+        '<span class="cl-qty">' +
+          '<button onclick="changeQty(\''+safeName+'\', -1)">–</button>' +
+          data.qty +
+          '<button onclick="changeQty(\''+safeName+'\', 1)">+</button>' +
+        '</span>' +
+        '<span class="cl-price">'+(data.price*data.qty).toLocaleString('fr-FR')+' FCFA</span>';
+      itemsEl.appendChild(row);
+    });
+
+    const cartBar = document.getElementById('cart-bar');
+    const isEmpty = count === 0;
+    cartBar.classList.toggle('hidden', isEmpty);
+    document.body.classList.toggle('cart-active', !isEmpty);
+    if(isEmpty) document.getElementById('cart-drawer').classList.add('hidden');
+
+    updatePayActions(total);
+  }
+
+  function updatePayActions(total){
+    document.getElementById('pay-om-btn').onclick = function(){
+      window.location.href = 'tel:' + encodeURIComponent('#150*47*1038767*' + total + '#');
+    };
+    document.getElementById('pay-momo-btn').onclick = function(){
+      window.location.href = 'tel:' + encodeURIComponent('*126*4*881521*' + total + '#');
+    };
+    document.getElementById('wa-order-btn').onclick = function(){
+      const lines = Object.entries(cart).map(([name,d]) =>
+        '- ' + d.qty + ' x ' + name + ' (' + (d.price*d.qty).toLocaleString('fr-FR') + ' FCFA)'
+      );
+      const msg = "Bonjour, voici ma commande O'Mba'p Lounge :\n" + lines.join('\n') +
+        '\n\nTotal : ' + total.toLocaleString('fr-FR') + ' FCFA';
+      window.open('https://wa.me/' + ORDER_WA_NUMBER + '?text=' + encodeURIComponent(msg), '_blank');
+    };
+  }
+
+  function toggleCart(){
+    document.getElementById('cart-drawer').classList.toggle('hidden');
+  }
+
+  function initAddButtons(){
+    document.querySelectorAll('main section .item').forEach(item => {
+      const row = item.querySelector('.item-row');
+      const nameEl = row ? row.querySelector('.name') : null;
+      if(!row || !nameEl) return;
+
+      let price = null;
+      const priceEl = row.querySelector('.price');
+      if(priceEl){
+        price = extractPrice(priceEl.textContent);
+      } else {
+        let sib = item.previousElementSibling;
+        while(sib && !sib.classList.contains('sub-label') && !sib.classList.contains('sec-head')){
+          sib = sib.previousElementSibling;
+        }
+        if(sib && sib.classList.contains('sub-label')){
+          price = extractPrice(sib.textContent);
+        }
+      }
+      if(price == null) return;
+
+      const btn = document.createElement('button');
+      btn.className = 'add-btn';
+      btn.type = 'button';
+      btn.textContent = '+';
+      btn.setAttribute('aria-label', 'Ajouter au panier');
+      const itemName = nameEl.textContent.trim();
+      btn.addEventListener('click', () => addToCart(itemName, price));
+      row.appendChild(btn);
+    });
+  }
+
+  initAddButtons();
+  renderCart();
+</script>
 
 <script>
   // Highlight active category on scroll
