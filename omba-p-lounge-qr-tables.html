@@ -85,7 +85,7 @@
 
 <script>
   const BASE_URL = "https://oummarcjordan-lgtm.github.io/portfolio/omba-p-lounge-menu.html";
-  const TOTAL_TABLES = 28;
+  const TOTAL_TABLES = 30;
   const grid = document.getElementById('grid');
 
   for (let i = 1; i <= TOTAL_TABLES; i++) {
@@ -94,7 +94,7 @@
     card.innerHTML =
       '<div class="mark">EAT · DRINK · DANCE · REST</div>' +
       '<div class="name">O\'Mba\'p <span>Lounge</span></div>' +
-      '<div class="table-num">TABLE N° ' + i + '</div>' +
+      '<div class="table-num">Table ' + i + '</div>' +
       '<div class="qr-box"><div id="qr-' + i + '"></div></div>' +
       '<div class="cta">Scannez pour commander</div>';
     grid.appendChild(card);
