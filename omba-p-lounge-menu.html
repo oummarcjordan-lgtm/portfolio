@@ -93,6 +93,57 @@
     border-color:var(--gold);
   }
 
+  .catnav-row{
+    display:flex;
+    align-items:center;
+  }
+  .catnav-row .catnav{flex:1; min-width:0;}
+  .lodging-btn{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--ember);
+    color:#fff;
+    text-decoration:none;
+    font-size:13px;
+    font-weight:600;
+    padding:9px 14px;
+    margin-right:14px;
+    border-radius:8px;
+    white-space:nowrap;
+  }
+  .lodging-btn svg{width:16px; height:16px; flex-shrink:0;}
+
+  .avail-badge{
+    display:inline-block;
+    font-size:10px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    padding:2px 8px;
+    border-radius:999px;
+    margin-left:8px;
+    vertical-align:middle;
+  }
+  .avail-yes{background:rgba(76,175,80,0.18); color:#7ed389;}
+  .avail-no{background:rgba(226,87,43,0.18); color:#f0a184;}
+  .name-group{display:flex; align-items:center; flex-wrap:wrap; gap:2px;}
+
+  .table-badge{
+    display:inline-block;
+    margin-top:14px;
+    padding:6px 16px;
+    background:rgba(242,183,5,0.14);
+    border:1px solid var(--gold);
+    color:var(--gold);
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.03em;
+  }
+  .table-badge.hidden{display:none;}
+
   /* ---------- SECTIONS ---------- */
   main{max-width:760px; margin:0 auto; padding:8px 18px 100px;}
   section{padding:38px 0; border-bottom:1px solid var(--line);}
@@ -328,10 +379,12 @@
   <h1>O'Mba'p <span>Lounge</span></h1>
   <div class="tag">Restaurant · Hébergement · Rooftop · Grill · Pizzeria</div>
   <div class="loc">Mini Prix Bastos, Yaoundé — +237 686 868 630</div>
+  <div id="table-badge" class="table-badge hidden"></div>
 </div>
 
 <div class="catnav-wrap">
-  <nav class="catnav" id="catnav">
+  <div class="catnav-row">
+    <nav class="catnav" id="catnav">
     <a href="#petit-dej">Petits-déj</a>
     <a href="#table">La Table</a>
     <a href="#salades">Salades</a>
@@ -351,7 +404,12 @@
     <a href="#champagnes">Champagnes</a>
     <a href="#whiskys">Whiskys</a>
     <a href="#cocktails">Cocktails</a>
-  </nav>
+    </nav>
+    <a href="#hebergement" class="lodging-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7"/><path d="M3 18v2"/><path d="M21 18v2"/><path d="M3 13h18"/><path d="M7 13V8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1"/></svg>
+      Hébergement
+    </a>
+  </div>
 </div>
 
 <main>
@@ -381,6 +439,13 @@
         <span class="price">10 000 FCFA</span>
       </div>
     </div>
+  </section>
+
+  <section id="hebergement">
+    <div class="sec-head"><h2>Hébergement</h2></div>
+    <div class="item" data-lodging="nuit"><div class="item-row"><span class="name-group"><span class="name">Chambre Standard</span><span class="avail-badge avail-yes">Disponible</span></span><span class="price">35 000 FCFA</span></div><div class="desc">Prix par nuit.</div></div>
+    <div class="item" data-lodging="nuit"><div class="item-row"><span class="name-group"><span class="name">Chambre VIP</span><span class="avail-badge avail-yes">Disponible</span></span><span class="price">50 000 FCFA</span></div><div class="desc">Prix par nuit.</div></div>
+    <div class="item" data-lodging="passage"><div class="item-row"><span class="name-group"><span class="name">Sieste</span><span class="avail-badge avail-yes">Disponible</span></span><span class="price">20 000 FCFA</span></div><div class="desc">Forfait passage (quelques heures).</div></div>
   </section>
 
   <section id="salades">
@@ -720,6 +785,16 @@
   // ---------- Panier ----------
   const cart = {};
   const ORDER_WA_NUMBER = "237686868630";
+  let orderCounter = null;
+
+  // ---------- Identification de la table (via QR unique par table) ----------
+  const urlParams = new URLSearchParams(window.location.search);
+  const tableNumber = urlParams.get('table');
+  if(tableNumber){
+    const badge = document.getElementById('table-badge');
+    badge.textContent = 'Table n° ' + tableNumber;
+    badge.classList.remove('hidden');
+  }
 
   function extractPrice(text){
     if(!text) return null;
@@ -737,11 +812,29 @@
     return Object.values(cart).reduce((s,i)=> s + i.qty, 0);
   }
 
-  function addToCart(name, price){
-    if(!cart[name]) cart[name] = {price, qty:0};
+  // unit: '' pour un plat/boisson classique, 'nuit' ou 'passage' pour l'hébergement
+  function addToCart(name, price, unit){
+    unit = unit || '';
+    if(unit === 'nuit' || unit === 'passage'){
+      const label = unit === 'nuit' ? 'nuits' : 'passages';
+      const question = unit === 'nuit'
+        ? 'Pour combien de nuits souhaitez-vous réserver "' + name + '" ?'
+        : 'Combien de "' + name + '" souhaitez-vous réserver ?';
+      let input = window.prompt(question, '1');
+      if(input === null) return; // annulé
+      let n = parseInt(input, 10);
+      if(isNaN(n) || n <= 0) n = 1;
+      if(!cart[name]) cart[name] = {price, qty:0, unit};
+      cart[name].qty += n;
+      renderCart();
+      toggleCart(true);
+      return;
+    }
+    if(!cart[name]) cart[name] = {price, qty:0, unit:''};
     cart[name].qty += 1;
     renderCart();
   }
+
   function changeQty(name, delta){
     if(!cart[name]) return;
     cart[name].qty += delta;
@@ -749,8 +842,14 @@
     renderCart();
   }
 
+  function unitLabel(data){
+    if(data.unit === 'nuit') return data.qty>1 ? 'nuits' : 'nuit';
+    if(data.unit === 'passage') return data.qty>1 ? 'passages' : 'passage';
+    return '';
+  }
+
   function renderCart(){
-    const count = cartTotal ? cartCount() : 0;
+    const count = cartCount();
     const total = cartTotal();
     document.getElementById('cart-count').textContent = count + (count>1 ? ' articles' : ' article');
     document.getElementById('cart-total').textContent = total.toLocaleString('fr-FR') + ' FCFA';
@@ -762,11 +861,13 @@
       const row = document.createElement('div');
       row.className = 'cart-line';
       const safeName = name.replace(/'/g, "\\'");
+      const unit = unitLabel(data);
+      const qtyDisplay = unit ? (data.qty + ' ' + unit) : data.qty;
       row.innerHTML =
-        '<span class="cl-name">'+name+'</span>' +
+        '<span class="cl-name">'+name+ (unit ? ' <small style="color:var(--cream-dim);">('+data.price.toLocaleString('fr-FR')+' FCFA / '+ (data.unit==='nuit'?'nuit':'passage') +')</small>' : '') +'</span>' +
         '<span class="cl-qty">' +
           '<button onclick="changeQty(\''+safeName+'\', -1)">–</button>' +
-          data.qty +
+          qtyDisplay +
           '<button onclick="changeQty(\''+safeName+'\', 1)">+</button>' +
         '</span>' +
         '<span class="cl-price">'+(data.price*data.qty).toLocaleString('fr-FR')+' FCFA</span>';
@@ -782,6 +883,14 @@
     updatePayActions(total);
   }
 
+  function buildInvoiceLines(){
+    return Object.entries(cart).map(([name,d]) => {
+      const unit = unitLabel(d);
+      const qtyPart = unit ? (d.qty + ' ' + unit) : (d.qty + ' x');
+      return '- ' + qtyPart + ' ' + name + ' — ' + d.price.toLocaleString('fr-FR') + ' FCFA' + (unit?' /'+ (d.unit==='nuit'?'nuit':'passage'):'') + ' = ' + (d.price*d.qty).toLocaleString('fr-FR') + ' FCFA';
+    });
+  }
+
   function updatePayActions(total){
     document.getElementById('pay-om-btn').onclick = function(){
       window.location.href = 'tel:' + encodeURIComponent('#150*47*1038767*' + total + '#');
@@ -790,17 +899,31 @@
       window.location.href = 'tel:' + encodeURIComponent('*126*4*881521*' + total + '#');
     };
     document.getElementById('wa-order-btn').onclick = function(){
-      const lines = Object.entries(cart).map(([name,d]) =>
-        '- ' + d.qty + ' x ' + name + ' (' + (d.price*d.qty).toLocaleString('fr-FR') + ' FCFA)'
-      );
-      const msg = "Bonjour, voici ma commande O'Mba'p Lounge :\n" + lines.join('\n') +
-        '\n\nTotal : ' + total.toLocaleString('fr-FR') + ' FCFA';
+      let tableLine;
+      if(tableNumber){
+        tableLine = "Table n° " + tableNumber;
+      } else {
+        const custName = window.prompt("À quel nom souhaitez-vous associer cette commande ? (votre nom, un pseudo, ou le nom de votre table)", "");
+        if(custName === null) return; // annulé
+        tableLine = custName.trim() || "Client";
+      }
+      if(!orderCounter) orderCounter = 'CMD-' + Date.now().toString().slice(-6);
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+      const lines = buildInvoiceLines();
+      const msg = "🧾 FACTURE — O'Mba'p Lounge\n" +
+        "N° " + orderCounter + " · " + dateStr + "\n" +
+        "Nom / Table : " + tableLine + "\n\n" +
+        lines.join('\n') +
+        '\n\nTOTAL : ' + total.toLocaleString('fr-FR') + ' FCFA';
       window.open('https://wa.me/' + ORDER_WA_NUMBER + '?text=' + encodeURIComponent(msg), '_blank');
     };
   }
 
-  function toggleCart(){
-    document.getElementById('cart-drawer').classList.toggle('hidden');
+  function toggleCart(forceOpen){
+    const drawer = document.getElementById('cart-drawer');
+    if(forceOpen === true){ drawer.classList.remove('hidden'); return; }
+    drawer.classList.toggle('hidden');
   }
 
   function initAddButtons(){
@@ -824,13 +947,23 @@
       }
       if(price == null) return;
 
+      const isComplet = item.querySelector('.avail-no') !== null;
       const btn = document.createElement('button');
       btn.className = 'add-btn';
       btn.type = 'button';
-      btn.textContent = '+';
       btn.setAttribute('aria-label', 'Ajouter au panier');
       const itemName = nameEl.textContent.trim();
-      btn.addEventListener('click', () => addToCart(itemName, price));
+      const unit = item.getAttribute('data-lodging') || '';
+
+      if(isComplet){
+        btn.textContent = '✕';
+        btn.disabled = true;
+        btn.style.opacity = '0.35';
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.textContent = '+';
+        btn.addEventListener('click', () => addToCart(itemName, price, unit));
+      }
       row.appendChild(btn);
     });
   }

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O'Mba'p Lounge — QR par table</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  @page { size: A5; margin: 8mm; }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:#e7e2d8;
+    font-family:'Work Sans', Arial, sans-serif;
+    padding:20px;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+    gap:20px;
+    max-width:1100px;
+    margin:0 auto;
+  }
+  .card{
+    background: radial-gradient(ellipse at top, rgba(242,183,5,0.10), transparent 60%), #0e1b1c;
+    color:#f4ede1;
+    border-radius:14px;
+    padding:22px 18px 20px;
+    text-align:center;
+    box-shadow:0 8px 20px rgba(0,0,0,0.2);
+    page-break-inside:avoid;
+  }
+  .mark{font-size:10px; letter-spacing:0.25em; color:#f2b705; margin-bottom:6px;}
+  .name{font-family:'Georgia', serif; font-size:20px; margin-bottom:2px;}
+  .name span{color:#f2b705;}
+  .table-num{
+    font-size:15px;
+    font-weight:700;
+    color:#f2b705;
+    margin:8px 0 14px;
+    letter-spacing:0.04em;
+  }
+  .qr-box{
+    background:#f4ede1;
+    display:inline-block;
+    padding:10px;
+    border-radius:8px;
+    margin-bottom:12px;
+  }
+  .cta{font-size:12px; font-weight:600;}
+  .no-print{
+    max-width:1100px;
+    margin:0 auto 20px;
+    text-align:center;
+    font-size:14px;
+    color:#333;
+  }
+  .no-print button{
+    margin-top:8px;
+    padding:10px 20px;
+    background:#0e1b1c;
+    color:#f2b705;
+    border:none;
+    border-radius:8px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  @media print{
+    body{background:#fff; padding:0;}
+    .no-print{display:none;}
+    .grid{gap:10px;}
+    .card{box-shadow:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="no-print">
+  Astuce : utilise "Imprimer" (menu du navigateur) puis "Enregistrer en PDF" pour tout envoyer à l'imprimeur en une fois — chaque carte se découpe pour une table.
+  <br>
+  <button onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+  const BASE_URL = "https://oummarcjordan-lgtm.github.io/portfolio/omba-p-lounge-menu.html";
+  const TOTAL_TABLES = 28;
+  const grid = document.getElementById('grid');
+
+  for (let i = 1; i <= TOTAL_TABLES; i++) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML =
+      '<div class="mark">EAT · DRINK · DANCE · REST</div>' +
+      '<div class="name">O\'Mba\'p <span>Lounge</span></div>' +
+      '<div class="table-num">TABLE N° ' + i + '</div>' +
+      '<div class="qr-box"><div id="qr-' + i + '"></div></div>' +
+      '<div class="cta">Scannez pour commander</div>';
+    grid.appendChild(card);
+
+    new QRCode(document.getElementById('qr-' + i), {
+      text: BASE_URL + "?table=" + i,
+      width: 140,
+      height: 140,
+      colorDark: "#0e1b1c",
+      colorLight: "#f4ede1",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  }
+</script>
+
+</body>
+</html>
