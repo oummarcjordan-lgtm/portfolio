@@ -1062,20 +1062,28 @@
     sendInvoiceToWhatsApp();
   });
 
-  document.getElementById('pay-om-btn').addEventListener('click', async () => {
-    await sendInvoiceToWhatsApp('Mode de paiement choisi : Orange Money (en attente de confirmation)');
-    const total = cartTotal();
-    setTimeout(() => {
-      window.location.href = 'tel:' + encodeURIComponent('#150*47*1038767*' + total + '#');
-    }, 400);
+  // Paiement d'abord (redirection immédiate vers l'appli téléphone),
+  // puis la facture WhatsApp s'ouvre automatiquement dès le retour sur la page.
+  async function payAndInvoice(telCode, methodLabel){
+    await getCustomerName(); // demande le nom AVANT de quitter la page pour payer
+
+    const sendOnReturn = () => {
+      if(document.visibilityState === 'visible'){
+        document.removeEventListener('visibilitychange', sendOnReturn);
+        sendInvoiceToWhatsApp('Mode de paiement choisi : ' + methodLabel + ' (en attente de confirmation)');
+      }
+    };
+    document.addEventListener('visibilitychange', sendOnReturn);
+
+    window.location.href = 'tel:' + encodeURIComponent(telCode);
+  }
+
+  document.getElementById('pay-om-btn').addEventListener('click', () => {
+    payAndInvoice('#150*47*1038767*' + cartTotal() + '#', 'Orange Money');
   });
 
-  document.getElementById('pay-momo-btn').addEventListener('click', async () => {
-    await sendInvoiceToWhatsApp('Mode de paiement choisi : MTN MoMo (en attente de confirmation)');
-    const total = cartTotal();
-    setTimeout(() => {
-      window.location.href = 'tel:' + encodeURIComponent('*126*4*881521*' + total + '#');
-    }, 400);
+  document.getElementById('pay-momo-btn').addEventListener('click', () => {
+    payAndInvoice('*126*4*881521*' + cartTotal() + '#', 'MTN MoMo');
   });
 </script>
 
