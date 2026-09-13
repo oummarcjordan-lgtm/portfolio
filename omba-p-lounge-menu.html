@@ -93,27 +93,12 @@
     border-color:var(--gold);
   }
 
-  .catnav-row{
-    display:flex;
-    align-items:center;
-  }
-  .catnav-row .catnav{flex:1; min-width:0;}
-  .lodging-btn{
-    flex:0 0 auto;
-    display:flex;
-    align-items:center;
-    gap:6px;
-    background:var(--ember);
-    color:#fff;
-    text-decoration:none;
-    font-size:13px;
+  .tag-link{
+    color:var(--gold);
+    text-decoration:underline;
+    text-underline-offset:3px;
     font-weight:600;
-    padding:9px 14px;
-    margin-right:14px;
-    border-radius:8px;
-    white-space:nowrap;
   }
-  .lodging-btn svg{width:16px; height:16px; flex-shrink:0;}
 
   .avail-badge{
     display:inline-block;
@@ -143,6 +128,70 @@
     letter-spacing:0.03em;
   }
   .table-badge.hidden{display:none;}
+
+  /* Modal de confirmation doré (remplace les fenêtres système) */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.65);
+    z-index:100;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .modal-overlay.hidden{display:none;}
+  .modal-box{
+    background:
+      radial-gradient(ellipse at top, rgba(242,183,5,0.12), transparent 60%),
+      var(--bg-raised);
+    border:2px solid var(--gold);
+    border-radius:18px;
+    padding:28px 24px 24px;
+    max-width:360px;
+    width:100%;
+    text-align:center;
+    box-shadow:0 0 0 1px rgba(242,183,5,0.15), 0 0 40px rgba(242,183,5,0.18), 0 25px 60px rgba(0,0,0,0.5);
+  }
+  .modal-title{
+    font-family:'Fraunces', serif;
+    font-size:22px;
+    font-weight:600;
+    color:var(--gold);
+    margin-bottom:10px;
+  }
+  .modal-message{
+    font-size:14px;
+    color:var(--cream);
+    line-height:1.5;
+    margin-bottom:18px;
+  }
+  .modal-input{
+    width:100%;
+    padding:12px 14px;
+    border-radius:9px;
+    border:1px solid var(--gold);
+    background:rgba(244,237,225,0.06);
+    color:var(--cream);
+    font-size:16px;
+    text-align:center;
+    font-family:'Work Sans', sans-serif;
+    margin-bottom:20px;
+  }
+  .modal-input:focus{
+    outline:none;
+    box-shadow:0 0 0 3px rgba(242,183,5,0.28);
+  }
+  .modal-actions{display:flex; gap:10px;}
+  .modal-btn{
+    flex:1;
+    padding:12px;
+    border-radius:9px;
+    border:none;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+  }
+  .modal-cancel{background:transparent; border:1px solid var(--line); color:var(--cream-dim);}
+  .modal-confirm{background:var(--gold); color:var(--bg);}
 
   /* ---------- SECTIONS ---------- */
   main{max-width:760px; margin:0 auto; padding:8px 18px 100px;}
@@ -377,14 +426,13 @@
 <div class="hero">
   <div class="mark">EAT · DRINK · DANCE · REST</div>
   <h1>O'Mba'p <span>Lounge</span></h1>
-  <div class="tag">Restaurant · Hébergement · Rooftop · Grill · Pizzeria</div>
+  <div class="tag">Restaurant · <a href="#hebergement" class="tag-link">Hébergement</a> · Rooftop · Grill · Pizzeria</div>
   <div class="loc">Mini Prix Bastos, Yaoundé — +237 686 868 630</div>
   <div id="table-badge" class="table-badge hidden"></div>
 </div>
 
 <div class="catnav-wrap">
-  <div class="catnav-row">
-    <nav class="catnav" id="catnav">
+  <nav class="catnav" id="catnav">
     <a href="#petit-dej">Petits-déj</a>
     <a href="#table">La Table</a>
     <a href="#salades">Salades</a>
@@ -404,12 +452,7 @@
     <a href="#champagnes">Champagnes</a>
     <a href="#whiskys">Whiskys</a>
     <a href="#cocktails">Cocktails</a>
-    </nav>
-    <a href="#hebergement" class="lodging-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7"/><path d="M3 18v2"/><path d="M21 18v2"/><path d="M3 13h18"/><path d="M7 13V8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1"/></svg>
-      Hébergement
-    </a>
-  </div>
+  </nav>
 </div>
 
 <main>
@@ -781,6 +824,18 @@
   <div class="pay-warning">Après paiement, gardez la confirmation reçue et montrez-la au personnel pour valider votre commande.</div>
 </div>
 
+<div id="custom-modal-overlay" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-message" id="modal-message"></div>
+    <input type="text" id="modal-input" class="modal-input" inputmode="text" />
+    <div class="modal-actions">
+      <button id="modal-cancel" class="modal-btn modal-cancel" type="button">Annuler</button>
+      <button id="modal-confirm" class="modal-btn modal-confirm" type="button">Valider</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // ---------- Panier ----------
   const cart = {};
@@ -794,6 +849,51 @@
     const badge = document.getElementById('table-badge');
     badge.textContent = 'Table n° ' + tableNumber;
     badge.classList.remove('hidden');
+  }
+
+  // ---------- Modal doré (remplace prompt()) ----------
+  function showModal(title, message, defaultValue){
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('custom-modal-overlay');
+      const titleEl = document.getElementById('modal-title');
+      const msgEl = document.getElementById('modal-message');
+      const input = document.getElementById('modal-input');
+      const btnConfirm = document.getElementById('modal-confirm');
+      const btnCancel = document.getElementById('modal-cancel');
+
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+      input.value = defaultValue || '';
+      overlay.classList.remove('hidden');
+      setTimeout(() => input.focus(), 50);
+
+      function cleanup(value){
+        overlay.classList.add('hidden');
+        btnConfirm.removeEventListener('click', onConfirm);
+        btnCancel.removeEventListener('click', onCancel);
+        input.removeEventListener('keydown', onKey);
+        resolve(value);
+      }
+      function onConfirm(){ cleanup(input.value); }
+      function onCancel(){ cleanup(null); }
+      function onKey(e){ if(e.key === 'Enter'){ onConfirm(); } }
+
+      btnConfirm.addEventListener('click', onConfirm);
+      btnCancel.addEventListener('click', onCancel);
+      input.addEventListener('keydown', onKey);
+    });
+  }
+
+  let customerName = null;
+  async function getCustomerName(){
+    if(customerName) return customerName;
+    const val = await showModal(
+      'Votre nom',
+      'À quel nom ou pseudo souhaitez-vous associer cette commande ?',
+      ''
+    );
+    customerName = (val && val.trim()) ? val.trim() : 'Client';
+    return customerName;
   }
 
   function extractPrice(text){
@@ -813,14 +913,13 @@
   }
 
   // unit: '' pour un plat/boisson classique, 'nuit' ou 'passage' pour l'hébergement
-  function addToCart(name, price, unit){
+  async function addToCart(name, price, unit){
     unit = unit || '';
     if(unit === 'nuit' || unit === 'passage'){
-      const label = unit === 'nuit' ? 'nuits' : 'passages';
       const question = unit === 'nuit'
-        ? 'Pour combien de nuits souhaitez-vous réserver "' + name + '" ?'
-        : 'Combien de "' + name + '" souhaitez-vous réserver ?';
-      let input = window.prompt(question, '1');
+        ? 'Pour combien de nuits souhaitez-vous réserver cette chambre ?'
+        : 'Combien de passages souhaitez-vous réserver ?';
+      const input = await showModal(name, question, '1');
       if(input === null) return; // annulé
       let n = parseInt(input, 10);
       if(isNaN(n) || n <= 0) n = 1;
@@ -879,8 +978,6 @@
     cartBar.classList.toggle('hidden', isEmpty);
     document.body.classList.toggle('cart-active', !isEmpty);
     if(isEmpty) document.getElementById('cart-drawer').classList.add('hidden');
-
-    updatePayActions(total);
   }
 
   function buildInvoiceLines(){
@@ -891,33 +988,22 @@
     });
   }
 
-  function updatePayActions(total){
-    document.getElementById('pay-om-btn').onclick = function(){
-      window.location.href = 'tel:' + encodeURIComponent('#150*47*1038767*' + total + '#');
-    };
-    document.getElementById('pay-momo-btn').onclick = function(){
-      window.location.href = 'tel:' + encodeURIComponent('*126*4*881521*' + total + '#');
-    };
-    document.getElementById('wa-order-btn').onclick = function(){
-      let tableLine;
-      if(tableNumber){
-        tableLine = "Table n° " + tableNumber;
-      } else {
-        const custName = window.prompt("À quel nom souhaitez-vous associer cette commande ? (votre nom, un pseudo, ou le nom de votre table)", "");
-        if(custName === null) return; // annulé
-        tableLine = custName.trim() || "Client";
-      }
-      if(!orderCounter) orderCounter = 'CMD-' + Date.now().toString().slice(-6);
-      const now = new Date();
-      const dateStr = now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
-      const lines = buildInvoiceLines();
-      const msg = "🧾 FACTURE — O'Mba'p Lounge\n" +
-        "N° " + orderCounter + " · " + dateStr + "\n" +
-        "Nom / Table : " + tableLine + "\n\n" +
-        lines.join('\n') +
-        '\n\nTOTAL : ' + total.toLocaleString('fr-FR') + ' FCFA';
-      window.open('https://wa.me/' + ORDER_WA_NUMBER + '?text=' + encodeURIComponent(msg), '_blank');
-    };
+  // Construit et envoie la facture WhatsApp — nom/pseudo ET table toujours précisés
+  async function sendInvoiceToWhatsApp(statusNote){
+    const name = await getCustomerName();
+    if(!orderCounter) orderCounter = 'CMD-' + Date.now().toString().slice(-6);
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+    const lines = buildInvoiceLines();
+    const total = cartTotal();
+    const msg = "🧾 FACTURE — O'Mba'p Lounge\n" +
+      "N° " + orderCounter + " · " + dateStr + "\n" +
+      "Nom / Pseudo : " + name + "\n" +
+      "Table n° : " + (tableNumber || "Non précisée") + "\n" +
+      (statusNote ? statusNote + "\n" : "") + "\n" +
+      lines.join('\n') +
+      '\n\nTOTAL : ' + total.toLocaleString('fr-FR') + ' FCFA';
+    window.open('https://wa.me/' + ORDER_WA_NUMBER + '?text=' + encodeURIComponent(msg), '_blank');
   }
 
   function toggleCart(forceOpen){
@@ -970,6 +1056,27 @@
 
   initAddButtons();
   renderCart();
+
+  // ---------- Actions du panier ----------
+  document.getElementById('wa-order-btn').addEventListener('click', () => {
+    sendInvoiceToWhatsApp();
+  });
+
+  document.getElementById('pay-om-btn').addEventListener('click', async () => {
+    await sendInvoiceToWhatsApp('Mode de paiement choisi : Orange Money (en attente de confirmation)');
+    const total = cartTotal();
+    setTimeout(() => {
+      window.location.href = 'tel:' + encodeURIComponent('#150*47*1038767*' + total + '#');
+    }, 400);
+  });
+
+  document.getElementById('pay-momo-btn').addEventListener('click', async () => {
+    await sendInvoiceToWhatsApp('Mode de paiement choisi : MTN MoMo (en attente de confirmation)');
+    const total = cartTotal();
+    setTimeout(() => {
+      window.location.href = 'tel:' + encodeURIComponent('*126*4*881521*' + total + '#');
+    }, 400);
+  });
 </script>
 
 <script>
