@@ -194,6 +194,7 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  db.settings({ experimentalAutoDetectLongPolling: true });
 </script>
 
 <script>
