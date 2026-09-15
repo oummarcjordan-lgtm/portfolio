@@ -850,7 +850,8 @@
     <span>Total</span>
     <span id="cart-total-2">0 FCFA</span>
   </div>
-  <button id="wa-order-btn" class="cart-action wa-action">Envoyer la commande en salle</button>
+  <button id="pay-terminal-btn" class="cart-action wa-action">Payer au Terminal (carte)</button>
+  <button id="pay-cash-btn" class="cart-action wa-action">Payer en espèces</button>
   <div class="pay-note">Le code de paiement se compose automatiquement avec le montant exact — il ne reste qu'à appuyer sur l'appel.</div>
   <button id="pay-om-btn" class="cart-action om-action">Payer avec Orange Money</button>
   <button id="pay-momo-btn" class="cart-action momo-action">Payer avec MTN MoMo</button>
@@ -878,16 +879,15 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script>
   const firebaseConfig = {
-    apiKey: "AIzaSyAMbijp8xA3BLbaulDxZRzSh_jBNI8cqK8",
-    authDomain: "omba-p-lounge.firebaseapp.com",
-    projectId: "omba-p-lounge",
-    storageBucket: "omba-p-lounge.firebasestorage.app",
-    messagingSenderId: "469786469177",
-    appId: "1:469786469177:web:614e9c606f58ba79e6bee8"
+    apiKey: "REMPLACER_apiKey",
+    authDomain: "REMPLACER_authDomain",
+    projectId: "REMPLACER_projectId",
+    storageBucket: "REMPLACER_storageBucket",
+    messagingSenderId: "REMPLACER_messagingSenderId",
+    appId: "REMPLACER_appId"
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-  db.settings({ experimentalAutoDetectLongPolling: true });
 </script>
 
 <script>
@@ -1060,7 +1060,7 @@
     const total = cartTotal();
 
     try{
-      const writePromise = db.collection('orders').add({
+      await db.collection('orders').add({
         orderRef: orderCounter,
         table: tableNumber || null,
         customerName: name,
@@ -1071,22 +1071,11 @@
         claimedBy: null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 12000)
-      );
-      await Promise.race([writePromise, timeoutPromise]);
       orderSent = true;
       await showModal('Commande envoyée', 'Votre commande a été transmise en salle. Un serveur va s\'en occuper.', '', true);
     } catch(err){
       console.error('Erreur envoi commande :', err);
-      const isTimeout = err && err.message === 'timeout';
-      await showModal(
-        'Problème de connexion',
-        isTimeout
-          ? 'La commande met trop de temps à partir. Vérifiez votre connexion (essayez de changer de réseau Wi-Fi/4G) et réessayez, ou signalez-le directement à un serveur.'
-          : 'La commande n\'a pas pu être transmise. Vérifiez votre connexion et réessayez, ou signalez-le directement à un serveur.',
-        '', true
-      );
+      await showModal('Problème de connexion', 'La commande n\'a pas pu être transmise. Vérifiez votre connexion et réessayez, ou signalez-le directement à un serveur.', '', true);
     }
   }
 
@@ -1150,15 +1139,59 @@
     renderCart();
   });
 
-  // ---------- Actions du panier ----------
-  document.getElementById('wa-order-btn').addEventListener('click', () => {
-    sendOrderToTablets();
-  });
+  function showLocationChoice(){
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('custom-modal-overlay');
+      const titleEl = document.getElementById('modal-title');
+      const msgEl = document.getElementById('modal-message');
+      const input = document.getElementById('modal-input');
+      const btnConfirm = document.getElementById('modal-confirm');
+      const btnCancel = document.getElementById('modal-cancel');
+
+      titleEl.textContent = 'Où êtes-vous ?';
+      msgEl.textContent = 'Sélectionnez le lieu pour utiliser le bon code de paiement.';
+      input.style.display = 'none';
+      overlay.classList.remove('hidden');
+
+      const prevConfirmText = btnConfirm.textContent;
+      const prevCancelText = btnCancel.textContent;
+      btnConfirm.textContent = 'Restaurant';
+      btnCancel.textContent = 'Rooftop';
+
+      function cleanup(value){
+        overlay.classList.add('hidden');
+        input.style.display = 'block';
+        btnConfirm.textContent = prevConfirmText;
+        btnCancel.textContent = prevCancelText;
+        btnConfirm.removeEventListener('click', onConfirm);
+        btnCancel.removeEventListener('click', onCancel);
+        resolve(value);
+      }
+      function onConfirm(){ cleanup('restaurant'); }
+      function onCancel(){ cleanup('rooftop'); }
+
+      btnConfirm.addEventListener('click', onConfirm);
+      btnCancel.addEventListener('click', onCancel);
+    });
+  }
+
+  // Codes marchands par lieu (l'API de paiement mobile diffère entre le Rooftop et le Restaurant)
+  const PAYMENT_CODES = {
+    rooftop:    { om: '1038767', momo: '881521' },
+    restaurant: { om: '1038766', momo: '643679' }
+  };
 
   // Paiement d'abord (redirection immédiate vers l'appli téléphone),
   // puis la commande part automatiquement vers les tablettes dès le retour sur la page.
-  async function payAndInvoice(telCode, methodLabel){
+  async function payAndInvoice(method){
     await getCustomerName(); // demande le nom AVANT de quitter la page pour payer
+    const location = await showLocationChoice();
+    const codes = PAYMENT_CODES[location];
+    const locationLabel = location === 'restaurant' ? 'Restaurant' : 'Rooftop';
+    const telCode = method === 'om'
+      ? '#150*47*' + codes.om + '*' + cartTotal() + '#'
+      : '*126*4*' + codes.momo + '*' + cartTotal() + '#';
+    const methodLabel = (method === 'om' ? 'Orange Money' : 'MTN MoMo') + ' — ' + locationLabel;
 
     const sendOnReturn = () => {
       if(document.visibilityState === 'visible'){
@@ -1172,11 +1205,19 @@
   }
 
   document.getElementById('pay-om-btn').addEventListener('click', () => {
-    payAndInvoice('#150*47*1038767*' + cartTotal() + '#', 'Orange Money');
+    payAndInvoice('om');
   });
 
   document.getElementById('pay-momo-btn').addEventListener('click', () => {
-    payAndInvoice('*126*4*881521*' + cartTotal() + '#', 'MTN MoMo');
+    payAndInvoice('momo');
+  });
+
+  document.getElementById('pay-terminal-btn').addEventListener('click', () => {
+    sendOrderToTablets('Mode de paiement choisi : Terminal (carte bancaire) — à encaisser sur place');
+  });
+
+  document.getElementById('pay-cash-btn').addEventListener('click', () => {
+    sendOrderToTablets('Mode de paiement choisi : Espèces — à encaisser sur place');
   });
 </script>
 
