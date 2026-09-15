@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>O'Mba'p Lounge — Commandes en salle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0e1b1c;
+    --bg-raised: #142627;
+    --bg-card: #1a2f30;
+    --gold: #f2b705;
+    --ember: #e2572b;
+    --green: #3ba55c;
+    --cream: #f4ede1;
+    --cream-dim: #cfc6b8;
+    --line: rgba(244,237,225,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--cream);
+    font-family:'Work Sans', sans-serif;
+    min-height:100vh;
+    padding-bottom:40px;
+  }
+  h1,h2{font-family:'Fraunces', serif; margin:0;}
+
+  header{
+    padding:18px 20px 14px;
+    border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:20;
+    background:var(--bg);
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  header h1{font-size:20px;}
+  header h1 span{color:var(--gold);}
+  #server-name-display{
+    font-size:13px;
+    color:var(--cream-dim);
+  }
+  #server-name-display b{color:var(--gold);}
+  #change-name-btn{
+    background:none; border:1px solid var(--line); color:var(--cream-dim);
+    font-size:11px; padding:5px 10px; border-radius:20px; cursor:pointer;
+  }
+
+  .status-bar{
+    padding:10px 20px;
+    font-size:13px;
+    color:var(--cream-dim);
+    display:flex; align-items:center; gap:8px;
+  }
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--green); flex-shrink:0;}
+  .dot.off{background:var(--ember);}
+
+  .presence-bar{
+    padding:0 20px 12px;
+    font-size:12.5px;
+    color:var(--cream-dim);
+    display:flex; align-items:center; gap:6px;
+    flex-wrap:wrap;
+  }
+  .presence-bar .presence-dot{width:7px; height:7px; border-radius:50%; background:var(--green); flex-shrink:0;}
+  .presence-bar.none .presence-dot{background:var(--ember);}
+  .presence-bar b{color:var(--cream);}
+
+  main{max-width:640px; margin:0 auto; padding:6px 14px 30px;}
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--cream-dim);
+  }
+  .empty-state .big{font-size:40px; margin-bottom:10px;}
+
+  .order-card{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-left:4px solid var(--gold);
+    border-radius:10px;
+    padding:16px 16px 14px;
+    margin:14px 0;
+    animation:slideIn 0.3s ease;
+  }
+  .order-card.claimed{border-left-color:var(--green); opacity:0.85;}
+  @keyframes slideIn{
+    from{opacity:0; transform:translateY(-10px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .oc-head{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    margin-bottom:8px;
+  }
+  .oc-table{
+    font-family:'Fraunces', serif;
+    font-size:22px;
+    color:var(--gold);
+  }
+  .oc-meta{
+    text-align:right;
+    font-size:12px;
+    color:var(--cream-dim);
+    line-height:1.5;
+  }
+  .oc-name{font-weight:600; color:var(--cream);}
+  .oc-items{margin:10px 0; font-size:14.5px;}
+  .oc-item{
+    display:flex; justify-content:space-between; gap:10px;
+    padding:5px 0;
+    border-bottom:1px dashed var(--line);
+  }
+  .oc-item:last-child{border-bottom:none;}
+  .oc-item .qty{color:var(--gold); font-weight:600; min-width:34px;}
+  .oc-note{
+    font-size:12px; color:var(--ember); margin:6px 0 2px;
+    font-style:italic;
+  }
+  .oc-total{
+    display:flex; justify-content:space-between;
+    font-weight:700; font-size:15px;
+    margin-top:10px; padding-top:10px;
+    border-top:1px solid var(--line);
+  }
+  .oc-actions{display:flex; gap:10px; margin-top:12px;}
+  .oc-btn{
+    flex:1;
+    padding:11px;
+    border-radius:8px;
+    border:none;
+    font-family:'Work Sans', sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .oc-claim{background:var(--gold); color:#241a03;}
+  .oc-served{background:var(--green); color:#08210f;}
+  .oc-claimed-tag{
+    display:inline-block;
+    font-size:12px;
+    color:var(--green);
+    margin-top:2px;
+  }
+
+  #sound-unlock{
+    position:fixed; inset:0; background:var(--bg);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:16px; z-index:100; text-align:center; padding:30px;
+  }
+  #sound-unlock button{
+    background:var(--gold); color:#241a03; border:none;
+    padding:16px 30px; border-radius:30px; font-size:16px; font-weight:700;
+    font-family:'Work Sans', sans-serif; cursor:pointer;
+  }
+  #sound-unlock p{color:var(--cream-dim); font-size:14px; max-width:320px;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div id="sound-unlock">
+  <h1>O'Mba'p <span>Lounge</span></h1>
+  <h2 style="font-size:18px;">Commandes en salle</h2>
+  <p>Appuyez pour activer l'alerte sonore des nouvelles commandes, puis laissez cette page ouverte sur la tablette pendant le service.</p>
+  <button id="unlock-btn" type="button">Commencer le service</button>
+</div>
+
+<header>
+  <h1>O'Mba'p <span>Lounge</span></h1>
+  <div>
+    <div id="server-name-display">Serveur : <b id="server-name-val">—</b></div>
+    <button id="change-name-btn" type="button">Changer</button>
+  </div>
+</header>
+
+<div class="status-bar">
+  <span class="dot" id="conn-dot"></span>
+  <span id="conn-label">Connexion en cours…</span>
+</div>
+<div class="presence-bar" id="presence-bar">
+  <span class="presence-dot"></span>
+  <span id="presence-label">Vérification des serveurs en ligne…</span>
+</div>
+
+<main>
+  <div id="empty-state" class="empty-state hidden">
+    <div class="big">🍽️</div>
+    Aucune commande en attente pour le moment.
+  </div>
+  <div id="orders-list"></div>
+</main>
+
+<!-- ======================================================================
+     FIREBASE — mêmes clés que sur le site de commande (omba-p-lounge-menu.html).
+     ====================================================================== -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "REMPLACER_apiKey",
+    authDomain: "REMPLACER_authDomain",
+    projectId: "REMPLACER_projectId",
+    storageBucket: "REMPLACER_storageBucket",
+    messagingSenderId: "REMPLACER_messagingSenderId",
+    appId: "REMPLACER_appId"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+<script>
+  // ---------- Nom du serveur (mémorisé sur cette tablette) ----------
+  function askServerName(){
+    let name = prompt("Nom du serveur pour cette tablette :", localStorage.getItem('omjServerName') || '');
+    if(name && name.trim()){
+      localStorage.setItem('omjServerName', name.trim());
+    }
+    return localStorage.getItem('omjServerName') || 'Serveur';
+  }
+  let serverName = localStorage.getItem('omjServerName');
+  if(!serverName){ serverName = askServerName(); }
+  document.getElementById('server-name-val').textContent = serverName;
+  document.getElementById('change-name-btn').addEventListener('click', () => {
+    serverName = askServerName();
+    document.getElementById('server-name-val').textContent = serverName;
+    sendHeartbeat(true);
+  });
+
+  // ---------- Présence (qui est réellement en ligne) ----------
+  // Identifiant permanent de CETTE tablette (indépendant du nom, qui peut changer).
+  function getTabletId(){
+    let id = localStorage.getItem('omjTabletId');
+    if(!id){
+      id = 'tab-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      localStorage.setItem('omjTabletId', id);
+    }
+    return id;
+  }
+  const tabletId = getTabletId();
+
+  const HEARTBEAT_MS = 15000;   // fréquence du signal de vie
+  const STALE_AFTER_MS = 40000; // au-delà, on considère la tablette hors ligne même si le signal "online" n'a pas été mis à jour proprement
+
+  function sendHeartbeat(online){
+    db.collection('presence').doc(tabletId).set({
+      name: serverName,
+      online: online,
+      lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true}).catch(() => {});
+  }
+
+  sendHeartbeat(true);
+  setInterval(() => sendHeartbeat(true), HEARTBEAT_MS);
+
+  document.addEventListener('visibilitychange', () => {
+    sendHeartbeat(document.visibilityState === 'visible');
+  });
+  window.addEventListener('beforeunload', () => sendHeartbeat(false));
+
+  const presenceBarEl = document.getElementById('presence-bar');
+  const presenceLabelEl = document.getElementById('presence-label');
+  let presenceDocs = {};
+
+  function renderPresence(){
+    const now = Date.now();
+    const onlineNames = Object.values(presenceDocs).filter(p => {
+      if(!p.online) return false;
+      const ts = (p.lastSeen && p.lastSeen.toMillis) ? p.lastSeen.toMillis() : 0;
+      return (now - ts) < STALE_AFTER_MS;
+    }).map(p => p.name);
+
+    presenceBarEl.classList.toggle('none', onlineNames.length === 0);
+    presenceLabelEl.innerHTML = onlineNames.length === 0
+      ? 'Aucun autre serveur en ligne actuellement'
+      : onlineNames.length + (onlineNames.length > 1 ? ' serveurs en ligne : ' : ' serveur en ligne : ') + '<b>' + onlineNames.join(', ') + '</b>';
+  }
+
+  db.collection('presence').onSnapshot(snap => {
+    presenceDocs = {};
+    snap.forEach(d => { presenceDocs[d.id] = d.data(); });
+    renderPresence();
+  });
+  setInterval(renderPresence, 5000); // réévalue même sans nouveau signal (détecte les tablettes qui ont juste disparu)
+
+  // ---------- Son d'alerte via Web Audio API (pas de fichier à héberger) ----------
+  let audioCtx = null;
+  function playBeep(){
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      [0, 0.18].forEach(delay => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.0001, now + delay);
+        gain.gain.exponentialRampToValueAtTime(0.35, now + delay + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.16);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(now + delay);
+        osc.stop(now + delay + 0.18);
+      });
+    }catch(e){}
+  }
+
+  document.getElementById('unlock-btn').addEventListener('click', () => {
+    playBeep();
+    document.getElementById('sound-unlock').classList.add('hidden');
+  });
+
+  function playAlert(){
+    playBeep();
+    if(navigator.vibrate) navigator.vibrate([200,100,200]);
+  }
+
+  // ---------- Rendu des commandes ----------
+  const listEl = document.getElementById('orders-list');
+  const emptyEl = document.getElementById('empty-state');
+  let knownIds = new Set();
+  let firstLoad = true;
+
+  function fmtTime(ts){
+    if(!ts || !ts.toDate) return '';
+    return ts.toDate().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  }
+
+  function renderOrders(snapshot){
+    const docs = snapshot.docs
+      .map(d => ({id: d.id, ...d.data()}))
+      .sort((a,b) => (a.createdAt?.toMillis?.() || 0) - (b.createdAt?.toMillis?.() || 0));
+
+    if(!firstLoad){
+      docs.forEach(o => {
+        if(!knownIds.has(o.id) && o.status === 'nouvelle') playAlert();
+      });
+    }
+    knownIds = new Set(docs.map(o => o.id));
+    firstLoad = false;
+
+    emptyEl.classList.toggle('hidden', docs.length > 0);
+    listEl.innerHTML = '';
+
+    docs.forEach(o => {
+      const card = document.createElement('div');
+      card.className = 'order-card' + (o.status === 'en_cours' ? ' claimed' : '');
+
+      const itemsHtml = (o.items || []).map(it =>
+        `<div class="oc-item"><span><span class="qty">${it.qty}×</span> ${it.name}</span><span>${(it.price*it.qty).toLocaleString('fr-FR')} FCFA</span></div>`
+      ).join('');
+
+      card.innerHTML = `
+        <div class="oc-head">
+          <div class="oc-table">Table n° ${o.table || '—'}</div>
+          <div class="oc-meta">
+            <div class="oc-name">${o.customerName || 'Client'}</div>
+            <div>${fmtTime(o.createdAt)} · ${o.orderRef || ''}</div>
+          </div>
+        </div>
+        <div class="oc-items">${itemsHtml}</div>
+        ${o.statusNote ? `<div class="oc-note">${o.statusNote}</div>` : ''}
+        <div class="oc-total"><span>Total</span><span>${(o.total||0).toLocaleString('fr-FR')} FCFA</span></div>
+        ${o.status === 'en_cours'
+          ? `<div class="oc-claimed-tag">✓ Pris en charge par ${o.claimedBy || ''}</div>
+             <div class="oc-actions"><button class="oc-btn oc-served" data-id="${o.id}">Commande servie</button></div>`
+          : `<div class="oc-actions"><button class="oc-btn oc-claim" data-id="${o.id}">Je m'en charge</button></div>`
+        }
+      `;
+      listEl.appendChild(card);
+    });
+
+    listEl.querySelectorAll('.oc-claim').forEach(btn => {
+      btn.addEventListener('click', () => {
+        db.collection('orders').doc(btn.dataset.id).update({
+          status: 'en_cours',
+          claimedBy: serverName
+        });
+      });
+    });
+    listEl.querySelectorAll('.oc-served').forEach(btn => {
+      btn.addEventListener('click', () => {
+        db.collection('orders').doc(btn.dataset.id).update({
+          status: 'servie'
+        });
+      });
+    });
+  }
+
+  // ---------- Écoute en temps réel ----------
+  const connDot = document.getElementById('conn-dot');
+  const connLabel = document.getElementById('conn-label');
+
+  db.collection('orders')
+    .where('status', 'in', ['nouvelle', 'en_cours'])
+    .onSnapshot(
+      (snap) => {
+        connDot.classList.remove('off');
+        connLabel.textContent = 'Connecté — en attente des commandes';
+        renderOrders(snap);
+      },
+      (err) => {
+        console.error(err);
+        connDot.classList.add('off');
+        connLabel.textContent = 'Connexion interrompue — vérifiez le Wi-Fi';
+      }
+    );
+</script>
+
+</body>
+</html>
