@@ -878,15 +878,16 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script>
   const firebaseConfig = {
-    apiKey: "REMPLACER_apiKey",
-    authDomain: "REMPLACER_authDomain",
-    projectId: "REMPLACER_projectId",
-    storageBucket: "REMPLACER_storageBucket",
-    messagingSenderId: "REMPLACER_messagingSenderId",
-    appId: "REMPLACER_appId"
+    apiKey: "AIzaSyAMbijp8xA3BLbaulDxZRzSh_jBNI8cqK8",
+    authDomain: "omba-p-lounge.firebaseapp.com",
+    projectId: "omba-p-lounge",
+    storageBucket: "omba-p-lounge.firebasestorage.app",
+    messagingSenderId: "469786469177",
+    appId: "1:469786469177:web:614e9c606f58ba79e6bee8"
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  db.settings({ experimentalAutoDetectLongPolling: true });
 </script>
 
 <script>
@@ -1059,7 +1060,7 @@
     const total = cartTotal();
 
     try{
-      await db.collection('orders').add({
+      const writePromise = db.collection('orders').add({
         orderRef: orderCounter,
         table: tableNumber || null,
         customerName: name,
@@ -1070,11 +1071,22 @@
         claimedBy: null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 12000)
+      );
+      await Promise.race([writePromise, timeoutPromise]);
       orderSent = true;
       await showModal('Commande envoyée', 'Votre commande a été transmise en salle. Un serveur va s\'en occuper.', '', true);
     } catch(err){
       console.error('Erreur envoi commande :', err);
-      await showModal('Problème de connexion', 'La commande n\'a pas pu être transmise. Vérifiez votre connexion et réessayez, ou signalez-le directement à un serveur.', '', true);
+      const isTimeout = err && err.message === 'timeout';
+      await showModal(
+        'Problème de connexion',
+        isTimeout
+          ? 'La commande met trop de temps à partir. Vérifiez votre connexion (essayez de changer de réseau Wi-Fi/4G) et réessayez, ou signalez-le directement à un serveur.'
+          : 'La commande n\'a pas pu être transmise. Vérifiez votre connexion et réessayez, ou signalez-le directement à un serveur.',
+        '', true
+      );
     }
   }
 
