@@ -2,12 +2,18 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=https://ombap.com/">
-<link rel="canonical" href="https://ombap.com/">
 <title>O'Mba'p Lounge — Menu</title>
-<script>window.location.replace("https://ombap.com/");</script>
+<script>
+  // Redirige vers la nouvelle adresse en conservant les paramètres d'URL
+  // (ex. ?table=5), pour que les QR codes déjà imprimés continuent
+  // d'afficher le bon numéro de table.
+  window.location.replace("https://ombap.com/" + window.location.search);
+</script>
 </head>
 <body>
-  <p>Redirection vers le menu… <a href="https://ombap.com/">Cliquez ici si rien ne se passe</a></p>
+  <p>Redirection vers le menu… <a id="fallback-link" href="https://ombap.com/">Cliquez ici si rien ne se passe</a></p>
+  <script>
+    document.getElementById('fallback-link').href = "https://ombap.com/" + window.location.search;
+  </script>
 </body>
 </html>
