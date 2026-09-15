@@ -879,12 +879,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script>
   const firebaseConfig = {
-    apiKey: "REMPLACER_apiKey",
-    authDomain: "REMPLACER_authDomain",
-    projectId: "REMPLACER_projectId",
-    storageBucket: "REMPLACER_storageBucket",
-    messagingSenderId: "REMPLACER_messagingSenderId",
-    appId: "REMPLACER_appId"
+    apiKey: "AIzaSyAMbijp8xA3BLbaulDxZRzSh_jBNI8cqK8",
+    authDomain: "omba-p-lounge.firebaseapp.com",
+    projectId: "omba-p-lounge",
+    storageBucket: "omba-p-lounge.firebasestorage.app",
+    messagingSenderId: "469786469177",
+    appId: "1:469786469177:web:614e9c606f58ba79e6bee8"
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
@@ -1046,7 +1046,7 @@
   // Envoie la commande directement aux tablettes des serveurs (Firestore),
   // remplace l'ancien envoi de facture par WhatsApp.
   let orderSent = false;
-  async function sendOrderToTablets(statusNote){
+  async function sendOrderToTablets(statusNote, paymentMethod, location){
     if(orderSent) return; // évite un doublon si l'utilisateur revient plusieurs fois sur la page
     const name = await getCustomerName();
     if(!orderCounter) orderCounter = 'CMD-' + Date.now().toString().slice(-6);
@@ -1058,15 +1058,19 @@
       unit: d.unit || null
     }));
     const total = cartTotal();
+    const loc = location || detectLocation();
 
     try{
       await db.collection('orders').add({
         orderRef: orderCounter,
         table: tableNumber || null,
+        location: loc, // 'rooftop' ou 'restaurant'
         customerName: name,
         items: items,
         total: total,
         statusNote: statusNote || null,
+        paymentMethod: paymentMethod || null, // 'om' | 'momo' | 'terminal' | 'cash'
+        paymentStatus: 'en_attente', // passe a 'validee' quand la caissiere confirme
         status: 'nouvelle',
         claimedBy: null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1139,40 +1143,13 @@
     renderCart();
   });
 
-  function showLocationChoice(){
-    return new Promise((resolve) => {
-      const overlay = document.getElementById('custom-modal-overlay');
-      const titleEl = document.getElementById('modal-title');
-      const msgEl = document.getElementById('modal-message');
-      const input = document.getElementById('modal-input');
-      const btnConfirm = document.getElementById('modal-confirm');
-      const btnCancel = document.getElementById('modal-cancel');
-
-      titleEl.textContent = 'Où êtes-vous ?';
-      msgEl.textContent = 'Sélectionnez le lieu pour utiliser le bon code de paiement.';
-      input.style.display = 'none';
-      overlay.classList.remove('hidden');
-
-      const prevConfirmText = btnConfirm.textContent;
-      const prevCancelText = btnCancel.textContent;
-      btnConfirm.textContent = 'Restaurant';
-      btnCancel.textContent = 'Rooftop';
-
-      function cleanup(value){
-        overlay.classList.add('hidden');
-        input.style.display = 'block';
-        btnConfirm.textContent = prevConfirmText;
-        btnCancel.textContent = prevCancelText;
-        btnConfirm.removeEventListener('click', onConfirm);
-        btnCancel.removeEventListener('click', onCancel);
-        resolve(value);
-      }
-      function onConfirm(){ cleanup('restaurant'); }
-      function onCancel(){ cleanup('rooftop'); }
-
-      btnConfirm.addEventListener('click', onConfirm);
-      btnCancel.addEventListener('click', onCancel);
-    });
+  // Le lieu (Rooftop ou Restaurant) est déduit automatiquement du numéro de
+  // table — aucune question posée au client, aucun risque qu'il se trompe.
+  // Tables 1 à 30 = Rooftop, tables 31 à 45 = Restaurant.
+  function detectLocation(){
+    const t = parseInt(tableNumber, 10);
+    if(t >= 31 && t <= 45) return 'restaurant';
+    return 'rooftop';
   }
 
   // Codes marchands par lieu (l'API de paiement mobile diffère entre le Rooftop et le Restaurant)
@@ -1185,7 +1162,7 @@
   // puis la commande part automatiquement vers les tablettes dès le retour sur la page.
   async function payAndInvoice(method){
     await getCustomerName(); // demande le nom AVANT de quitter la page pour payer
-    const location = await showLocationChoice();
+    const location = detectLocation();
     const codes = PAYMENT_CODES[location];
     const locationLabel = location === 'restaurant' ? 'Restaurant' : 'Rooftop';
     const telCode = method === 'om'
@@ -1196,7 +1173,7 @@
     const sendOnReturn = () => {
       if(document.visibilityState === 'visible'){
         document.removeEventListener('visibilitychange', sendOnReturn);
-        sendOrderToTablets('Mode de paiement choisi : ' + methodLabel + ' (en attente de confirmation)');
+        sendOrderToTablets('Mode de paiement choisi : ' + methodLabel + ' (en attente de confirmation)', method, location);
       }
     };
     document.addEventListener('visibilitychange', sendOnReturn);
@@ -1213,11 +1190,13 @@
   });
 
   document.getElementById('pay-terminal-btn').addEventListener('click', () => {
-    sendOrderToTablets('Mode de paiement choisi : Terminal (carte bancaire) — à encaisser sur place');
+    const location = detectLocation();
+    sendOrderToTablets('Mode de paiement choisi : Terminal (carte bancaire) — à encaisser sur place', 'terminal', location);
   });
 
   document.getElementById('pay-cash-btn').addEventListener('click', () => {
-    sendOrderToTablets('Mode de paiement choisi : Espèces — à encaisser sur place');
+    const location = detectLocation();
+    sendOrderToTablets('Mode de paiement choisi : Espèces — à encaisser sur place', 'cash', location);
   });
 </script>
 
