@@ -193,6 +193,35 @@
   .modal-cancel{background:transparent; border:1px solid var(--line); color:var(--cream-dim);}
   .modal-confirm{background:var(--gold); color:var(--bg);}
 
+  /* ---------- Bouton flottant "Voir ma commande" ---------- */
+  .my-order-float{
+    position:fixed;
+    right:18px; bottom:18px;
+    z-index:60;
+    background:var(--gold);
+    color:var(--bg);
+    border:none;
+    border-radius:30px;
+    padding:13px 20px;
+    font-family:'Work Sans', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.4);
+    cursor:pointer;
+  }
+  .my-order-float.hidden{display:none;}
+  .my-order-items{max-height:280px; overflow-y:auto; margin:10px 0;}
+  .my-order-item-row{
+    display:flex; justify-content:space-between; gap:10px;
+    padding:7px 0; border-bottom:1px dashed var(--line); font-size:14px;
+  }
+  .my-order-total-row{
+    display:flex; justify-content:space-between; font-weight:700;
+    padding:10px 0; border-top:1px solid var(--line); margin-top:4px;
+  }
+  .my-order-status{font-size:13px; color:var(--cream-dim); margin:6px 0 14px;}
+  .my-order-cancel-btn{background:transparent; border:1px solid var(--ember); color:var(--ember);}
+
   /* ---------- SECTIONS ---------- */
   main{max-width:760px; margin:0 auto; padding:8px 18px 100px;}
   section{padding:38px 0; border-bottom:1px solid var(--line);}
@@ -882,6 +911,21 @@
   </div>
 </div>
 
+<button id="my-order-float" class="my-order-float hidden" type="button" onclick="showMyOrderPanel()">🧾 Voir ma commande</button>
+
+<div id="my-order-overlay" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-title">Ma commande</div>
+    <div id="my-order-items" class="my-order-items"></div>
+    <div class="my-order-total-row"><span>Total</span><span id="my-order-total">0 FCFA</span></div>
+    <div id="my-order-status" class="my-order-status"></div>
+    <div class="modal-actions">
+      <button id="my-order-close-btn" class="modal-btn modal-cancel" type="button">Fermer</button>
+      <button id="my-order-cancel-btn" class="modal-btn my-order-cancel-btn" type="button">Annuler la commande</button>
+    </div>
+  </div>
+</div>
+
 <!-- ======================================================================
      FIREBASE — transmission des commandes aux tablettes des serveurs.
      Remplacer les valeurs ci-dessous par celles de TON projet Firebase
@@ -1075,7 +1119,7 @@
     const loc = location || detectLocation();
 
     try{
-      await db.collection('orders').add({
+      const docRef = await db.collection('orders').add({
         orderRef: orderCounter,
         table: tableNumber || null,
         location: loc, // 'rooftop' ou 'restaurant'
@@ -1090,6 +1134,17 @@
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       orderSent = true;
+      lastOrderId = docRef.id;
+      lastOrderSummary = { items, total, table: tableNumber || null };
+
+      // Panier vidé, retour automatique au menu principal
+      Object.keys(cart).forEach(k => delete cart[k]);
+      renderCart();
+      document.getElementById('cart-drawer').classList.add('hidden');
+      document.getElementById('cart-bar').classList.add('hidden');
+      document.getElementById('my-order-float').classList.remove('hidden');
+      window.scrollTo({top:0, behavior:'smooth'});
+
       await showModal('Commande envoyée', 'Votre commande a été transmise en salle. Un serveur va s\'en occuper.', '', true);
     } catch(err){
       console.error('Erreur envoi commande :', err);
@@ -1098,6 +1153,49 @@
       orderInFlight = false;
     }
   }
+
+  // ---------- Panneau "Voir ma commande" + annulation côté client ----------
+  let lastOrderId = null;
+  let lastOrderSummary = null;
+
+  function showMyOrderPanel(){
+    if(!lastOrderId || !lastOrderSummary) return;
+    const itemsEl = document.getElementById('my-order-items');
+    itemsEl.innerHTML = lastOrderSummary.items.map(it =>
+      `<div class="my-order-item-row"><span>${it.qty}× ${it.name}</span><span>${(it.price*it.qty).toLocaleString('fr-FR')} FCFA</span></div>`
+    ).join('');
+    document.getElementById('my-order-total').textContent = lastOrderSummary.total.toLocaleString('fr-FR') + ' FCFA';
+    document.getElementById('my-order-status').textContent = 'Commande envoyée en salle — en attente de prise en charge.';
+    document.getElementById('my-order-overlay').classList.remove('hidden');
+  }
+  function hideMyOrderPanel(){
+    document.getElementById('my-order-overlay').classList.add('hidden');
+  }
+  document.getElementById('my-order-close-btn').addEventListener('click', hideMyOrderPanel);
+
+  document.getElementById('my-order-cancel-btn').addEventListener('click', async () => {
+    if(!lastOrderId) return;
+    const sure = confirm('Voulez-vous vraiment annuler votre commande ?');
+    if(!sure) return;
+
+    try{
+      const snap = await db.collection('orders').doc(lastOrderId).get();
+      if(!snap.exists){
+        document.getElementById('my-order-status').textContent = 'Cette commande a déjà été prise en charge, elle ne peut plus être annulée.';
+        return;
+      }
+      await db.collection('orders').doc(lastOrderId).delete();
+      hideMyOrderPanel();
+      document.getElementById('my-order-float').classList.add('hidden');
+      lastOrderId = null;
+      lastOrderSummary = null;
+      orderSent = false; // le client peut repasser une nouvelle commande
+      await showModal('Commande annulée', 'Votre commande a bien été annulée.', '', true);
+    } catch(err){
+      console.error('Erreur annulation :', err);
+      alert("Erreur : impossible d'annuler la commande pour le moment.");
+    }
+  });
 
   function toggleCart(forceOpen){
     const drawer = document.getElementById('cart-drawer');
