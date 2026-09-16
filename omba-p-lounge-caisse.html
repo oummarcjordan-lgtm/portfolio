@@ -109,6 +109,7 @@
     font-weight:600; font-size:13.5px; cursor:pointer; font-family:'Work Sans', sans-serif;
   }
   .oc-validate{background:var(--gold); color:#241a03;}
+  .oc-cancel{background:none; border:1px solid var(--ember); color:var(--ember);}
   .oc-pdf{background:var(--bg-raised); color:var(--cream); border:1px solid var(--gold) !important;}
   .hidden{display:none !important;}
 </style>
@@ -282,6 +283,7 @@
         <div class="oc-payment">💳 Mode de paiement : <b>${methodLabel}</b>${needsCheck ? ' — <span style="color:var(--ember)">⚠️ à vérifier</span>' : ''}</div>
         <div class="oc-actions">
           <button class="oc-btn oc-validate" data-id="${o.id}">💰 Encaisser (fonds reçus)</button>
+          <button class="oc-btn oc-cancel" data-id="${o.id}">✕ Annuler</button>
         </div>
       `;
       listEl.appendChild(card);
@@ -300,7 +302,9 @@
         const archivedOrder = {
           ...order,
           paymentStatus: 'validee',
-          paymentValidatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          orderStatus: 'validee',
+          paymentValidatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          archivedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         delete archivedOrder.id;
 
@@ -316,6 +320,36 @@
           alert("Erreur : le ticket n'a pas pu être archivé/supprimé. Réessayez.");
           btn.disabled = false;
           btn.textContent = '💰 Encaisser (fonds reçus)';
+        }
+      });
+    });
+
+    listEl.querySelectorAll('.oc-cancel').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const order = allOrders.find(o => o.id === btn.dataset.id);
+        if(!order) return;
+        const reason = prompt("Annuler la commande de la table n° " + (order.table||'—') + " — motif (optionnel) :", '');
+        if(reason === null) return; // l'utilisateur a fait "Annuler" sur la boîte de dialogue elle-même
+
+        btn.disabled = true;
+        btn.textContent = 'Annulation…';
+
+        const archivedOrder = {
+          ...order,
+          orderStatus: 'annulee',
+          cancelReason: reason || null,
+          archivedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        delete archivedOrder.id;
+
+        try{
+          await db.collection('archive').doc(order.id).set(archivedOrder);
+          await db.collection('orders').doc(order.id).delete();
+        } catch(err){
+          console.error('Erreur annulation :', err);
+          alert("Erreur : la commande n'a pas pu être annulée. Réessayez.");
+          btn.disabled = false;
+          btn.textContent = '✕ Annuler';
         }
       });
     });

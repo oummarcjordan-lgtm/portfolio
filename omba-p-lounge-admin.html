@@ -57,6 +57,41 @@
   }
   .stat-card .num{font-family:'Fraunces', serif; font-size:22px; color:var(--gold);}
   .stat-card .lbl{font-size:11px; color:var(--cream-dim); margin-top:2px;}
+  .stat-card.highlight{border-color:var(--gold); background:rgba(242,183,5,0.08);}
+  .stat-card.highlight .num{font-size:26px;}
+
+  .date-row{
+    display:flex; align-items:center; gap:10px; padding:14px 14px 4px; max-width:680px; margin:0 auto; flex-wrap:wrap;
+  }
+  .date-row label{font-size:13px; color:var(--cream-dim);}
+  .date-row input[type="date"]{
+    padding:8px 10px; border-radius:8px; border:1px solid var(--line);
+    background:var(--bg-raised); color:var(--cream); font-size:13px;
+  }
+  #today-btn{
+    padding:8px 12px; border-radius:8px; border:1px solid var(--line); background:none;
+    color:var(--cream-dim); font-size:12px; cursor:pointer;
+  }
+  #download-report-btn{
+    margin-left:auto; padding:10px 16px; border-radius:8px; border:none;
+    background:var(--gold); color:#241a03; font-weight:700; font-size:13px; cursor:pointer;
+  }
+
+  .panel-row{
+    display:flex; gap:10px; padding:8px 14px; max-width:680px; margin:0 auto; flex-wrap:wrap;
+  }
+  .panel{
+    flex:1; min-width:260px; background:var(--bg-card); border:1px solid var(--line);
+    border-radius:10px; padding:14px;
+  }
+  .panel h3{font-size:14px; color:var(--gold); margin-bottom:10px; font-family:'Work Sans', sans-serif; font-weight:700;}
+  .panel-row-line{
+    display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px dashed var(--line);
+  }
+  .panel-row-line:last-child{border-bottom:none;}
+  .panel-row-line .name{color:var(--cream);}
+  .panel-row-line .val{color:var(--cream-dim); text-align:right;}
+  .panel-empty{font-size:12px; color:var(--cream-dim); text-align:center; padding:10px 0;}
 
   .filters{
     display:flex; gap:8px; padding:12px 14px; max-width:680px; margin:0 auto; flex-wrap:wrap;
@@ -74,6 +109,8 @@
     background:var(--bg-card); border:1px solid var(--line); border-left:4px solid var(--green);
     border-radius:10px; padding:16px; margin:14px 0;
   }
+  .order-card.cancelled{border-left-color:var(--ember); opacity:0.75;}
+  .oc-payment.cancelled{background:rgba(226,87,43,0.1); color:var(--ember);}
   .oc-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px;}
   .oc-table{font-family:'Fraunces', serif; font-size:20px; color:var(--gold);}
   .oc-loc{display:inline-block; font-size:11px; padding:2px 8px; border-radius:12px; border:1px solid var(--gold); color:var(--gold); margin-left:8px; vertical-align:middle;}
@@ -103,13 +140,46 @@
 <div id="app" class="hidden">
   <header>
     <h1>O'Mba'p <span>Lounge</span> — Tableau de bord</h1>
-    <button id="logout-btn" type="button">Se déconnecter</button>
+    <div style="text-align:right;">
+      <div id="admin-name-val" style="font-size:12px; color:var(--gold); margin-bottom:4px;"></div>
+      <button id="logout-btn" type="button">Se déconnecter</button>
+    </div>
   </header>
 
+  <div class="date-row">
+    <label for="filter-date">Rapport du :</label>
+    <input type="date" id="filter-date">
+    <button id="today-btn" type="button">Aujourd'hui</button>
+    <button id="download-report-btn" type="button">📥 Télécharger le rapport du jour</button>
+  </div>
+
   <div class="stats-row">
-    <div class="stat-card"><div class="num" id="stat-today">0</div><div class="lbl">Encaissé aujourd'hui (FCFA)</div></div>
-    <div class="stat-card"><div class="num" id="stat-total">0</div><div class="lbl">Encaissé — total archivé (FCFA)</div></div>
-    <div class="stat-card"><div class="num" id="stat-count">0</div><div class="lbl">Commandes archivées</div></div>
+    <div class="stat-card highlight"><div class="num" id="stat-revenue">0</div><div class="lbl">Total encaissé ce jour (FCFA)</div></div>
+    <div class="stat-card"><div class="num" id="stat-validated">0</div><div class="lbl">Commandes validées</div></div>
+    <div class="stat-card"><div class="num" id="stat-cancelled">0</div><div class="lbl">Commandes annulées</div></div>
+    <div class="stat-card"><div class="num" id="stat-orders-count">0</div><div class="lbl">Total commandes du jour</div></div>
+  </div>
+
+  <div class="panel-row">
+    <div class="panel">
+      <h3>Par mode de paiement</h3>
+      <div id="breakdown-payment"></div>
+    </div>
+    <div class="panel">
+      <h3>Par lieu</h3>
+      <div id="breakdown-location"></div>
+    </div>
+  </div>
+
+  <div class="panel-row">
+    <div class="panel">
+      <h3>Tables les plus commandées</h3>
+      <div id="top-tables"></div>
+    </div>
+    <div class="panel">
+      <h3>Menus les plus commandés</h3>
+      <div id="top-items"></div>
+    </div>
   </div>
 
   <div class="filters">
@@ -125,12 +195,17 @@
       <option value="terminal">Terminal</option>
       <option value="cash">Espèces</option>
     </select>
+    <select id="filter-status">
+      <option value="">Validées + annulées</option>
+      <option value="validee">Validées seulement</option>
+      <option value="annulee">Annulées seulement</option>
+    </select>
   </div>
 
   <main>
     <div id="empty-state" class="empty-state hidden">
       <div class="big">🗂️</div>
-      Aucune commande archivée pour l'instant.
+      Aucune commande pour cette date.
     </div>
     <div id="orders-list"></div>
   </main>
@@ -156,36 +231,55 @@
 
 <script>
   // ======================================================================
-  // CODE D'ACCÈS — à changer ici si besoin. Réservé à toi seul.
+  // CODES D'ACCÈS — chacun donne le même accès complet à l'interface.
+  // Ajoute/retire des lignes ici si d'autres personnes doivent avoir accès.
   // ======================================================================
-  const ADMIN_PIN = "9137";
+  const ADMIN_CODES = {
+    "9137": "Marc (Développeur)",
+    "4826": "Patron"
+  };
+
+  let currentAdminName = null;
 
   document.getElementById('login-btn').addEventListener('click', tryLogin);
   document.getElementById('login-pin').addEventListener('keydown', (e) => { if(e.key==='Enter') tryLogin(); });
 
   function tryLogin(){
     const pin = document.getElementById('login-pin').value.trim();
-    if(pin !== ADMIN_PIN){
+    if(!ADMIN_CODES[pin]){
       document.getElementById('login-error').textContent = 'Code incorrect.';
       return;
     }
-    sessionStorage.setItem('omjAdminOk', '1');
+    currentAdminName = ADMIN_CODES[pin];
+    sessionStorage.setItem('omjAdminOk', pin);
     startApp();
   }
   document.getElementById('logout-btn').addEventListener('click', () => {
     sessionStorage.removeItem('omjAdminOk');
     location.reload();
   });
-  if(sessionStorage.getItem('omjAdminOk') === '1'){ startApp(); }
+  const savedPin = sessionStorage.getItem('omjAdminOk');
+  if(savedPin && ADMIN_CODES[savedPin]){
+    currentAdminName = ADMIN_CODES[savedPin];
+  }
+  if(currentAdminName){ startApp(); }
 
   function startApp(){
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
+    document.getElementById('admin-name-val').textContent = currentAdminName || '';
     subscribeArchive();
   }
 
   document.getElementById('filter-location').addEventListener('change', renderAll);
   document.getElementById('filter-method').addEventListener('change', renderAll);
+  document.getElementById('filter-status').addEventListener('change', renderAll);
+  document.getElementById('filter-date').addEventListener('change', renderAll);
+  document.getElementById('today-btn').addEventListener('click', () => {
+    document.getElementById('filter-date').value = todayStr();
+    renderAll();
+  });
+  document.getElementById('download-report-btn').addEventListener('click', downloadDailyReport);
 
   const PAYMENT_LABELS = { om: 'Orange Money', momo: 'MTN MoMo', terminal: 'Terminal (carte)', cash: 'Espèces' };
   function locLabel(loc){ return loc === 'restaurant' ? 'Restaurant' : 'Rooftop'; }
@@ -193,63 +287,144 @@
     if(!ts || !ts.toDate) return '';
     return ts.toDate().toLocaleDateString('fr-FR') + ' ' + ts.toDate().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
   }
+  function todayStr(){
+    const d = new Date();
+    const off = d.getTimezoneOffset();
+    return new Date(d.getTime() - off*60000).toISOString().slice(0,10);
+  }
+  function orderDateKey(o){
+    const ts = o.archivedAt || o.paymentValidatedAt || o.createdAt;
+    if(!ts || !ts.toDate) return null;
+    const d = ts.toDate();
+    const off = d.getTimezoneOffset();
+    return new Date(d.getTime() - off*60000).toISOString().slice(0,10);
+  }
+  function orderOutcome(o){
+    return o.orderStatus || (o.paymentStatus === 'validee' ? 'validee' : 'inconnu');
+  }
+
+  document.getElementById('filter-date').value = todayStr();
 
   let allArchived = [];
   function subscribeArchive(){
     db.collection('archive').onSnapshot((snap) => {
       allArchived = snap.docs
         .map(d => ({id: d.id, ...d.data()}))
-        .sort((a,b) => (b.paymentValidatedAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0) - (a.paymentValidatedAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0));
+        .sort((a,b) => (b.archivedAt?.toMillis?.() || b.paymentValidatedAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0) - (a.archivedAt?.toMillis?.() || a.paymentValidatedAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0));
       renderAll();
     }, (err) => console.error(err));
   }
 
+  function computeDayStats(dateStr){
+    const dayOrders = allArchived.filter(o => orderDateKey(o) === dateStr);
+    const validated = dayOrders.filter(o => orderOutcome(o) === 'validee');
+    const cancelled = dayOrders.filter(o => orderOutcome(o) === 'annulee');
+    const revenue = validated.reduce((s,o) => s + (o.total||0), 0);
+
+    const byMethod = {};
+    const byLocation = {};
+    const byTable = {};
+    const byItem = {};
+    validated.forEach(o => {
+      const m = o.paymentMethod || 'inconnu';
+      byMethod[m] = byMethod[m] || {count:0, total:0};
+      byMethod[m].count++; byMethod[m].total += (o.total||0);
+
+      const l = o.location || 'inconnu';
+      byLocation[l] = byLocation[l] || {count:0, total:0};
+      byLocation[l].count++; byLocation[l].total += (o.total||0);
+
+      const t = 'Table ' + (o.table || '—') + ' (' + locLabel(o.location) + ')';
+      byTable[t] = byTable[t] || {count:0, total:0};
+      byTable[t].count++; byTable[t].total += (o.total||0);
+
+      (o.items||[]).forEach(it => {
+        byItem[it.name] = byItem[it.name] || {qty:0, total:0};
+        byItem[it.name].qty += (it.qty||0);
+        byItem[it.name].total += (it.qty||0)*(it.price||0);
+      });
+    });
+
+    const topTables = Object.entries(byTable).sort((a,b)=>b[1].total-a[1].total).slice(0,8);
+    const topItems = Object.entries(byItem).sort((a,b)=>b[1].qty-a[1].qty).slice(0,10);
+
+    return { dayOrders, validated, cancelled, revenue, byMethod, byLocation, topTables, topItems };
+  }
+
   function renderAll(){
+    const dateStr = document.getElementById('filter-date').value || todayStr();
     const locFilter = document.getElementById('filter-location').value;
     const methodFilter = document.getElementById('filter-method').value;
-    let list = allArchived;
+    const statusFilter = document.getElementById('filter-status').value;
+
+    const stats = computeDayStats(dateStr);
+
+    // ---------- Cartes resume ----------
+    document.getElementById('stat-revenue').textContent = stats.revenue.toLocaleString('fr-FR');
+    document.getElementById('stat-validated').textContent = stats.validated.length;
+    document.getElementById('stat-cancelled').textContent = stats.cancelled.length;
+    document.getElementById('stat-orders-count').textContent = stats.dayOrders.length;
+
+    // ---------- Panneau paiement ----------
+    const payEl = document.getElementById('breakdown-payment');
+    const methodEntries = Object.entries(stats.byMethod);
+    payEl.innerHTML = methodEntries.length ? methodEntries.map(([m, v]) =>
+      `<div class="panel-row-line"><span class="name">${PAYMENT_LABELS[m]||m}</span><span class="val">${v.count} · ${v.total.toLocaleString('fr-FR')} FCFA</span></div>`
+    ).join('') : '<div class="panel-empty">Aucune donnée pour ce jour.</div>';
+
+    // ---------- Panneau lieu ----------
+    const locEl = document.getElementById('breakdown-location');
+    const locEntries = Object.entries(stats.byLocation);
+    locEl.innerHTML = locEntries.length ? locEntries.map(([l, v]) =>
+      `<div class="panel-row-line"><span class="name">${locLabel(l)}</span><span class="val">${v.count} · ${v.total.toLocaleString('fr-FR')} FCFA</span></div>`
+    ).join('') : '<div class="panel-empty">Aucune donnée pour ce jour.</div>';
+
+    // ---------- Top tables ----------
+    const tablesEl = document.getElementById('top-tables');
+    tablesEl.innerHTML = stats.topTables.length ? stats.topTables.map(([t, v]) =>
+      `<div class="panel-row-line"><span class="name">${t}</span><span class="val">${v.count} cmd · ${v.total.toLocaleString('fr-FR')} FCFA</span></div>`
+    ).join('') : '<div class="panel-empty">Aucune donnée pour ce jour.</div>';
+
+    // ---------- Top items ----------
+    const itemsEl = document.getElementById('top-items');
+    itemsEl.innerHTML = stats.topItems.length ? stats.topItems.map(([n, v]) =>
+      `<div class="panel-row-line"><span class="name">${n}</span><span class="val">${v.qty}×</span></div>`
+    ).join('') : '<div class="panel-empty">Aucune donnée pour ce jour.</div>';
+
+    // ---------- Liste detaillee (filtree) ----------
+    let list = stats.dayOrders;
     if(locFilter) list = list.filter(o => o.location === locFilter);
     if(methodFilter) list = list.filter(o => o.paymentMethod === methodFilter);
+    if(statusFilter) list = list.filter(o => orderOutcome(o) === statusFilter);
 
-    // ---------- Statistiques ----------
-    const today = new Date(); today.setHours(0,0,0,0);
-    let todayTotal = 0, allTimeTotal = 0;
-    allArchived.forEach(o => {
-      const t = o.paymentValidatedAt?.toDate ? o.paymentValidatedAt.toDate() : null;
-      allTimeTotal += (o.total || 0);
-      if(t && t >= today) todayTotal += (o.total || 0);
-    });
-    document.getElementById('stat-today').textContent = todayTotal.toLocaleString('fr-FR');
-    document.getElementById('stat-total').textContent = allTimeTotal.toLocaleString('fr-FR');
-    document.getElementById('stat-count').textContent = allArchived.length;
-
-    // ---------- Liste ----------
     const listEl = document.getElementById('orders-list');
     document.getElementById('empty-state').classList.toggle('hidden', list.length > 0);
     listEl.innerHTML = '';
 
     list.forEach(o => {
       const card = document.createElement('div');
-      card.className = 'order-card';
+      const outcome = orderOutcome(o);
+      card.className = 'order-card' + (outcome === 'annulee' ? ' cancelled' : '');
       const itemsHtml = (o.items || []).map(it =>
         `<div class="oc-item"><span><span class="qty">${it.qty}×</span> ${it.name}</span><span>${(it.price*it.qty).toLocaleString('fr-FR')} FCFA</span></div>`
       ).join('');
       const methodLabel = PAYMENT_LABELS[o.paymentMethod] || 'Non précisé';
+      const statusLine = outcome === 'annulee'
+        ? `<div class="oc-payment cancelled">✕ Annulée${o.cancelReason ? ' — ' + o.cancelReason : ''}</div>`
+        : `<div class="oc-payment">✓ Encaissé — <b>${methodLabel}</b></div>`;
 
       card.innerHTML = `
         <div class="oc-head">
           <div><span class="oc-table">Table n° ${o.table || '—'}</span><span class="oc-loc">${locLabel(o.location)}</span></div>
           <div class="oc-meta">
             <div class="oc-name">${o.customerName || 'Client'}</div>
-            <div>${fmtDateTime(o.paymentValidatedAt || o.createdAt)} · ${o.orderRef || ''}</div>
+            <div>${fmtDateTime(o.archivedAt || o.paymentValidatedAt || o.createdAt)} · ${o.orderRef || ''}</div>
           </div>
         </div>
         <div class="oc-items">${itemsHtml}</div>
         <div class="oc-total"><span>Total</span><span>${(o.total||0).toLocaleString('fr-FR')} FCFA</span></div>
-        <div class="oc-payment">✓ Encaissé — <b>${methodLabel}</b></div>
-        <div class="oc-actions">
-          <button class="oc-btn" data-id="${o.id}">📥 Télécharger la facture PDF</button>
-        </div>
+        ${statusLine}
+        ${outcome !== 'annulee' ? `<div class="oc-actions"><button class="oc-btn" data-id="${o.id}">📥 Télécharger la facture PDF</button></div>` : ''}
       `;
       listEl.appendChild(card);
     });
@@ -260,6 +435,96 @@
         if(order) generateInvoicePDF(order);
       });
     });
+  }
+
+  // ---------- Rapport journalier PDF (pour le patron, simple a telecharger) ----------
+  function downloadDailyReport(){
+    const dateStr = document.getElementById('filter-date').value || todayStr();
+    const stats = computeDayStats(dateStr);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const goldRGB = [194, 155, 15];
+    const navyRGB = [14, 27, 28];
+    let y = 20;
+
+    doc.setTextColor(...navyRGB);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.text("O'Mba'p Lounge — Rapport journalier", 105, y, {align:'center'});
+    y += 8;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    const dObj = new Date(dateStr + 'T12:00:00');
+    doc.text(dObj.toLocaleDateString('fr-FR', {weekday:'long', year:'numeric', month:'long', day:'numeric'}), 105, y, {align:'center'});
+    y += 10;
+
+    doc.setDrawColor(...goldRGB);
+    doc.setLineWidth(0.6);
+    doc.line(20, y, 190, y);
+    y += 10;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('TOTAL ENCAISSÉ : ' + stats.revenue.toLocaleString('fr-FR') + ' FCFA', 20, y);
+    y += 8;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.text('Commandes validées : ' + stats.validated.length + '   |   Commandes annulées : ' + stats.cancelled.length + '   |   Total du jour : ' + stats.dayOrders.length, 20, y);
+    y += 12;
+
+    function sectionTitle(title){
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(...navyRGB);
+      doc.text(title, 20, y);
+      y += 3;
+      doc.setDrawColor(200,200,200);
+      doc.line(20, y, 190, y);
+      y += 6;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10.5);
+    }
+
+    sectionTitle('Répartition par mode de paiement');
+    const methodEntries = Object.entries(stats.byMethod);
+    if(!methodEntries.length){ doc.text('Aucune donnée.', 20, y); y += 6; }
+    methodEntries.forEach(([m,v]) => {
+      doc.text((PAYMENT_LABELS[m]||m) + ' — ' + v.count + ' commande(s)', 20, y);
+      doc.text(v.total.toLocaleString('fr-FR') + ' FCFA', 190, y, {align:'right'});
+      y += 6;
+    });
+    y += 4;
+
+    sectionTitle('Répartition par lieu');
+    const locEntries = Object.entries(stats.byLocation);
+    if(!locEntries.length){ doc.text('Aucune donnée.', 20, y); y += 6; }
+    locEntries.forEach(([l,v]) => {
+      doc.text(locLabel(l) + ' — ' + v.count + ' commande(s)', 20, y);
+      doc.text(v.total.toLocaleString('fr-FR') + ' FCFA', 190, y, {align:'right'});
+      y += 6;
+    });
+    y += 4;
+
+    sectionTitle('Tables les plus commandées');
+    if(!stats.topTables.length){ doc.text('Aucune donnée.', 20, y); y += 6; }
+    stats.topTables.forEach(([t,v]) => {
+      if(y > 270){ doc.addPage(); y = 20; }
+      doc.text(t + ' — ' + v.count + ' commande(s)', 20, y);
+      doc.text(v.total.toLocaleString('fr-FR') + ' FCFA', 190, y, {align:'right'});
+      y += 6;
+    });
+    y += 4;
+
+    sectionTitle('Menus les plus commandés');
+    if(!stats.topItems.length){ doc.text('Aucune donnée.', 20, y); y += 6; }
+    stats.topItems.forEach(([n,v]) => {
+      if(y > 270){ doc.addPage(); y = 20; }
+      doc.text(String(n).slice(0,55), 20, y);
+      doc.text(v.qty + '×', 190, y, {align:'right'});
+      y += 6;
+    });
+
+    doc.save('rapport-omba-p-lounge-' + dateStr + '.pdf');
   }
 
   // ---------- Génération de la facture PDF (identique à l'interface caisse) ----------
