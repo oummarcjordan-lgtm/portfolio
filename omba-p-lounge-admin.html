@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>O'Mba'p Lounge — Tableau de bord</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #0e1b1c; --bg-raised: #142627; --bg-card: #1a2f30;
+    --gold: #f2b705; --ember: #e2572b; --green: #3ba55c;
+    --cream: #f4ede1; --cream-dim: #cfc6b8; --line: rgba(244,237,225,0.14);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--cream); font-family:'Work Sans', sans-serif; min-height:100vh; padding-bottom:40px;}
+  h1,h2{font-family:'Fraunces', serif; margin:0;}
+
+  #login-screen{
+    position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:16px; z-index:200; text-align:center; padding:30px;
+  }
+  #login-screen input{
+    width:100%; max-width:280px; padding:13px 14px; border-radius:8px; border:1px solid var(--line);
+    background:var(--bg-raised); color:var(--cream); font-size:15px; letter-spacing:0.3em; text-align:center;
+  }
+  #login-screen button{
+    background:var(--gold); color:#241a03; border:none; padding:14px 30px; border-radius:30px;
+    font-size:15px; font-weight:700; cursor:pointer; width:100%; max-width:280px; font-family:'Work Sans', sans-serif;
+  }
+  #login-error{color:var(--ember); font-size:13px; min-height:18px;}
+
+  header{
+    padding:18px 20px 14px; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:20;
+    background:var(--bg); display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  header h1{font-size:19px;}
+  header h1 span{color:var(--gold);}
+  #logout-btn{
+    background:none; border:1px solid var(--line); color:var(--cream-dim);
+    font-size:11px; padding:5px 10px; border-radius:20px; cursor:pointer;
+  }
+
+  .stats-row{
+    display:flex; gap:10px; padding:14px 14px 4px; max-width:680px; margin:0 auto; flex-wrap:wrap;
+  }
+  .stat-card{
+    flex:1; min-width:130px; background:var(--bg-card); border:1px solid var(--line);
+    border-radius:10px; padding:12px 14px;
+  }
+  .stat-card .num{font-family:'Fraunces', serif; font-size:22px; color:var(--gold);}
+  .stat-card .lbl{font-size:11px; color:var(--cream-dim); margin-top:2px;}
+
+  .filters{
+    display:flex; gap:8px; padding:12px 14px; max-width:680px; margin:0 auto; flex-wrap:wrap;
+  }
+  .filters select{
+    padding:8px 10px; border-radius:8px; border:1px solid var(--line);
+    background:var(--bg-raised); color:var(--cream); font-size:13px;
+  }
+
+  main{max-width:680px; margin:0 auto; padding:6px 14px 30px;}
+  .empty-state{text-align:center; padding:60px 20px; color:var(--cream-dim);}
+  .empty-state .big{font-size:40px; margin-bottom:10px;}
+
+  .order-card{
+    background:var(--bg-card); border:1px solid var(--line); border-left:4px solid var(--green);
+    border-radius:10px; padding:16px; margin:14px 0;
+  }
+  .oc-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px;}
+  .oc-table{font-family:'Fraunces', serif; font-size:20px; color:var(--gold);}
+  .oc-loc{display:inline-block; font-size:11px; padding:2px 8px; border-radius:12px; border:1px solid var(--gold); color:var(--gold); margin-left:8px; vertical-align:middle;}
+  .oc-meta{text-align:right; font-size:12px; color:var(--cream-dim); line-height:1.5;}
+  .oc-name{font-weight:600; color:var(--cream);}
+  .oc-items{margin:10px 0; font-size:14px;}
+  .oc-item{display:flex; justify-content:space-between; gap:10px; padding:4px 0; border-bottom:1px dashed var(--line);}
+  .oc-item:last-child{border-bottom:none;}
+  .oc-item .qty{color:var(--gold); font-weight:600; min-width:34px;}
+  .oc-total{display:flex; justify-content:space-between; font-weight:700; font-size:15px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line);}
+  .oc-payment{display:flex; align-items:center; gap:8px; margin-top:10px; font-size:13px; padding:8px 10px; border-radius:8px; background:rgba(59,165,92,0.08);}
+  .oc-actions{display:flex; gap:10px; margin-top:12px;}
+  .oc-btn{flex:1; padding:10px; border-radius:8px; border:1px solid var(--gold); background:none; color:var(--cream); font-weight:600; font-size:13px; cursor:pointer;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <h1>O'Mba'p <span>Lounge</span></h1>
+  <h2 style="font-size:16px; color:var(--cream-dim); font-family:'Work Sans',sans-serif; font-weight:500;">Tableau de bord — Accès développeur</h2>
+  <input id="login-pin" type="password" inputmode="numeric" maxlength="8" placeholder="Code d'accès">
+  <button id="login-btn" type="button">Se connecter</button>
+  <div id="login-error"></div>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <h1>O'Mba'p <span>Lounge</span> — Tableau de bord</h1>
+    <button id="logout-btn" type="button">Se déconnecter</button>
+  </header>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="num" id="stat-today">0</div><div class="lbl">Encaissé aujourd'hui (FCFA)</div></div>
+    <div class="stat-card"><div class="num" id="stat-total">0</div><div class="lbl">Encaissé — total archivé (FCFA)</div></div>
+    <div class="stat-card"><div class="num" id="stat-count">0</div><div class="lbl">Commandes archivées</div></div>
+  </div>
+
+  <div class="filters">
+    <select id="filter-location">
+      <option value="">Tous les lieux</option>
+      <option value="rooftop">Rooftop</option>
+      <option value="restaurant">Restaurant</option>
+    </select>
+    <select id="filter-method">
+      <option value="">Tous les paiements</option>
+      <option value="om">Orange Money</option>
+      <option value="momo">MTN MoMo</option>
+      <option value="terminal">Terminal</option>
+      <option value="cash">Espèces</option>
+    </select>
+  </div>
+
+  <main>
+    <div id="empty-state" class="empty-state hidden">
+      <div class="big">🗂️</div>
+      Aucune commande archivée pour l'instant.
+    </div>
+    <div id="orders-list"></div>
+  </main>
+</div>
+
+<!-- ======================================================================
+     FIREBASE — mêmes clés que les autres pages du projet.
+     ====================================================================== -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAMbijp8xA3BLbaulDxZRzSh_jBNI8cqK8",
+    authDomain: "omba-p-lounge.firebaseapp.com",
+    projectId: "omba-p-lounge",
+    storageBucket: "omba-p-lounge.firebasestorage.app",
+    messagingSenderId: "469786469177",
+    appId: "1:469786469177:web:614e9c606f58ba79e6bee8"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+<script>
+  // ======================================================================
+  // CODE D'ACCÈS — à changer ici si besoin. Réservé à toi seul.
+  // ======================================================================
+  const ADMIN_PIN = "9137";
+
+  document.getElementById('login-btn').addEventListener('click', tryLogin);
+  document.getElementById('login-pin').addEventListener('keydown', (e) => { if(e.key==='Enter') tryLogin(); });
+
+  function tryLogin(){
+    const pin = document.getElementById('login-pin').value.trim();
+    if(pin !== ADMIN_PIN){
+      document.getElementById('login-error').textContent = 'Code incorrect.';
+      return;
+    }
+    sessionStorage.setItem('omjAdminOk', '1');
+    startApp();
+  }
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    sessionStorage.removeItem('omjAdminOk');
+    location.reload();
+  });
+  if(sessionStorage.getItem('omjAdminOk') === '1'){ startApp(); }
+
+  function startApp(){
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    subscribeArchive();
+  }
+
+  document.getElementById('filter-location').addEventListener('change', renderAll);
+  document.getElementById('filter-method').addEventListener('change', renderAll);
+
+  const PAYMENT_LABELS = { om: 'Orange Money', momo: 'MTN MoMo', terminal: 'Terminal (carte)', cash: 'Espèces' };
+  function locLabel(loc){ return loc === 'restaurant' ? 'Restaurant' : 'Rooftop'; }
+  function fmtDateTime(ts){
+    if(!ts || !ts.toDate) return '';
+    return ts.toDate().toLocaleDateString('fr-FR') + ' ' + ts.toDate().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+  }
+
+  let allArchived = [];
+  function subscribeArchive(){
+    db.collection('archive').onSnapshot((snap) => {
+      allArchived = snap.docs
+        .map(d => ({id: d.id, ...d.data()}))
+        .sort((a,b) => (b.paymentValidatedAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0) - (a.paymentValidatedAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0));
+      renderAll();
+    }, (err) => console.error(err));
+  }
+
+  function renderAll(){
+    const locFilter = document.getElementById('filter-location').value;
+    const methodFilter = document.getElementById('filter-method').value;
+    let list = allArchived;
+    if(locFilter) list = list.filter(o => o.location === locFilter);
+    if(methodFilter) list = list.filter(o => o.paymentMethod === methodFilter);
+
+    // ---------- Statistiques ----------
+    const today = new Date(); today.setHours(0,0,0,0);
+    let todayTotal = 0, allTimeTotal = 0;
+    allArchived.forEach(o => {
+      const t = o.paymentValidatedAt?.toDate ? o.paymentValidatedAt.toDate() : null;
+      allTimeTotal += (o.total || 0);
+      if(t && t >= today) todayTotal += (o.total || 0);
+    });
+    document.getElementById('stat-today').textContent = todayTotal.toLocaleString('fr-FR');
+    document.getElementById('stat-total').textContent = allTimeTotal.toLocaleString('fr-FR');
+    document.getElementById('stat-count').textContent = allArchived.length;
+
+    // ---------- Liste ----------
+    const listEl = document.getElementById('orders-list');
+    document.getElementById('empty-state').classList.toggle('hidden', list.length > 0);
+    listEl.innerHTML = '';
+
+    list.forEach(o => {
+      const card = document.createElement('div');
+      card.className = 'order-card';
+      const itemsHtml = (o.items || []).map(it =>
+        `<div class="oc-item"><span><span class="qty">${it.qty}×</span> ${it.name}</span><span>${(it.price*it.qty).toLocaleString('fr-FR')} FCFA</span></div>`
+      ).join('');
+      const methodLabel = PAYMENT_LABELS[o.paymentMethod] || 'Non précisé';
+
+      card.innerHTML = `
+        <div class="oc-head">
+          <div><span class="oc-table">Table n° ${o.table || '—'}</span><span class="oc-loc">${locLabel(o.location)}</span></div>
+          <div class="oc-meta">
+            <div class="oc-name">${o.customerName || 'Client'}</div>
+            <div>${fmtDateTime(o.paymentValidatedAt || o.createdAt)} · ${o.orderRef || ''}</div>
+          </div>
+        </div>
+        <div class="oc-items">${itemsHtml}</div>
+        <div class="oc-total"><span>Total</span><span>${(o.total||0).toLocaleString('fr-FR')} FCFA</span></div>
+        <div class="oc-payment">✓ Encaissé — <b>${methodLabel}</b></div>
+        <div class="oc-actions">
+          <button class="oc-btn" data-id="${o.id}">📥 Télécharger la facture PDF</button>
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+
+    listEl.querySelectorAll('.oc-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const order = allArchived.find(o => o.id === btn.dataset.id);
+        if(order) generateInvoicePDF(order);
+      });
+    });
+  }
+
+  // ---------- Génération de la facture PDF (identique à l'interface caisse) ----------
+  function generateInvoicePDF(o){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a5' });
+    const goldRGB = [194, 155, 15];
+    const navyRGB = [14, 27, 28];
+    let y = 18;
+
+    doc.setTextColor(...navyRGB);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text("O'Mba'p Lounge", 74, y, {align:'center'});
+    y += 7;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(locLabel(o.location) + ' — Table n° ' + (o.table || '—'), 74, y, {align:'center'});
+    y += 9;
+
+    doc.setDrawColor(...goldRGB);
+    doc.setLineWidth(0.6);
+    doc.line(14, y, 134, y);
+    y += 8;
+
+    doc.setFontSize(10);
+    doc.text('N° commande : ' + (o.orderRef || '—'), 14, y); y += 6;
+    doc.text('Date : ' + fmtDateTime(o.paymentValidatedAt || o.createdAt), 14, y); y += 6;
+    doc.text('Client : ' + (o.customerName || '—'), 14, y); y += 6;
+    doc.text('Mode de paiement : ' + (PAYMENT_LABELS[o.paymentMethod] || '—'), 14, y); y += 10;
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Article', 14, y);
+    doc.text('Qté', 92, y);
+    doc.text('Total', 120, y);
+    doc.setFont('helvetica', 'normal');
+    y += 3;
+    doc.setDrawColor(200,200,200);
+    doc.line(14, y, 134, y);
+    y += 6;
+
+    (o.items || []).forEach(it => {
+      if(y > 190){ doc.addPage(); y = 20; }
+      const lineTotal = (it.price * it.qty).toLocaleString('fr-FR') + ' FCFA';
+      doc.text(String(it.name).slice(0, 38), 14, y);
+      doc.text(String(it.qty), 94, y);
+      doc.text(lineTotal, 120, y, {align:'left'});
+      y += 6;
+    });
+
+    y += 4;
+    doc.setDrawColor(...goldRGB);
+    doc.line(14, y, 134, y);
+    y += 8;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text('TOTAL : ' + (o.total||0).toLocaleString('fr-FR') + ' FCFA', 14, y);
+    y += 14;
+
+    doc.setFillColor(...goldRGB);
+    doc.roundedRect(14, y, 50, 12, 2, 2, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(12);
+    doc.text('✓ SOLDÉE', 39, y + 8, {align:'center'});
+
+    doc.save('facture-' + (o.orderRef || o.id) + '.pdf');
+  }
+</script>
+
+</body>
+</html>

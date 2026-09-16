@@ -123,22 +123,12 @@
     <button id="logout-btn" type="button">Se déconnecter</button>
   </header>
 
-  <div class="tabs">
-    <div class="tab active" data-tab="attente">Commandes en cours</div>
-    <div class="tab" data-tab="validees">Validées</div>
-  </div>
-
   <main>
     <div id="empty-attente" class="empty-state hidden">
       <div class="big">✅</div>
       Aucune commande en cours pour le moment.
     </div>
-    <div id="empty-validees" class="empty-state hidden">
-      <div class="big">🧾</div>
-      Aucune facture validée pour l'instant.
-    </div>
     <div id="list-attente"></div>
-    <div id="list-validees" class="hidden"></div>
   </main>
 </div>
 
@@ -216,18 +206,6 @@
     subscribeOrders();
   }
 
-  // ---------- Onglets ----------
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      const which = tab.dataset.tab;
-      document.getElementById('list-attente').classList.toggle('hidden', which !== 'attente');
-      document.getElementById('list-validees').classList.toggle('hidden', which !== 'validees');
-      renderAll();
-    });
-  });
-
   // ---------- Libellés ----------
   const PAYMENT_LABELS = {
     om: 'Orange Money', momo: 'MTN MoMo', terminal: 'Terminal (carte)', cash: 'Espèces'
@@ -263,26 +241,27 @@
   }
 
   function renderAll(){
-    const attente = allOrders.filter(o => (o.paymentStatus || 'en_attente') === 'en_attente');
-    const validees = allOrders.filter(o => o.paymentStatus === 'validee');
-    renderList('list-attente', 'empty-attente', attente, false);
-    renderList('list-validees', 'empty-validees', validees, true);
+    // Seules les commandes pas encore encaissées restent visibles ici —
+    // une fois encaissées, elles sont archivées puis retirées de cette liste.
+    const enCours = allOrders.filter(o => o.paymentStatus !== 'validee');
+    renderList('list-attente', 'empty-attente', enCours);
   }
 
-  function renderList(listId, emptyId, orders, isValidated){
+  function renderList(listId, emptyId, orders){
     const listEl = document.getElementById(listId);
     document.getElementById(emptyId).classList.toggle('hidden', orders.length > 0);
     listEl.innerHTML = '';
 
     orders.forEach(o => {
       const card = document.createElement('div');
-      card.className = 'order-card' + (isValidated ? ' validee' : '');
+      card.className = 'order-card';
 
       const itemsHtml = (o.items || []).map(it =>
         `<div class="oc-item"><span><span class="qty">${it.qty}×</span> ${it.name}</span><span>${(it.price*it.qty).toLocaleString('fr-FR')} FCFA</span></div>`
       ).join('');
 
       const methodLabel = PAYMENT_LABELS[o.paymentMethod] || 'Non précisé';
+      const needsCheck = o.paymentMethod === 'om' || o.paymentMethod === 'momo';
 
       card.innerHTML = `
         <div class="oc-head">
@@ -294,10 +273,9 @@
         </div>
         <div class="oc-items">${itemsHtml}</div>
         <div class="oc-total"><span>Total</span><span>${(o.total||0).toLocaleString('fr-FR')} FCFA</span></div>
-        <div class="oc-payment">💳 Mode de paiement : <b>${methodLabel}</b></div>
+        <div class="oc-payment">💳 Mode de paiement : <b>${methodLabel}</b>${needsCheck ? ' — <span style="color:var(--ember)">⚠️ à vérifier</span>' : ''}</div>
         <div class="oc-actions">
-          ${!isValidated ? `<button class="oc-btn oc-validate" data-id="${o.id}">Valider le paiement</button>` : ''}
-          ${isValidated ? `<button class="oc-btn oc-pdf" data-id="${o.id}">Télécharger la facture PDF</button>` : ''}
+          <button class="oc-btn oc-validate" data-id="${o.id}">💰 Encaisser (fonds reçus)</button>
         </div>
       `;
       listEl.appendChild(card);
@@ -305,18 +283,34 @@
 
     listEl.querySelectorAll('.oc-validate').forEach(btn => {
       btn.addEventListener('click', async () => {
+        const order = allOrders.find(o => o.id === btn.dataset.id);
+        if(!order) return;
+        const sure = confirm('Confirmez-vous avoir bien reçu le paiement (' + (order.total||0).toLocaleString('fr-FR') + ' FCFA) ?\nLe ticket sera archivé puis retiré de cette liste.');
+        if(!sure) return;
+
         btn.disabled = true;
-        btn.textContent = 'Validation…';
-        await db.collection('orders').doc(btn.dataset.id).update({
+        btn.textContent = 'Encaissement…';
+
+        const archivedOrder = {
+          ...order,
           paymentStatus: 'validee',
           paymentValidatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      });
-    });
-    listEl.querySelectorAll('.oc-pdf').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const order = allOrders.find(o => o.id === btn.dataset.id);
-        if(order) generateInvoicePDF(order);
+        };
+        delete archivedOrder.id;
+
+        try{
+          // 1) Enregistrement permanent AVANT toute suppression (jamais perdu)
+          await db.collection('archive').doc(order.id).set(archivedOrder);
+          // 2) Facture PDF téléchargée immédiatement
+          generateInvoicePDF({...order, paymentStatus:'validee'});
+          // 3) Le ticket disparaît de la caisse une fois l'archive confirmée
+          await db.collection('orders').doc(order.id).delete();
+        } catch(err){
+          console.error('Erreur encaissement :', err);
+          alert("Erreur : le ticket n'a pas pu être archivé/supprimé. Réessayez.");
+          btn.disabled = false;
+          btn.textContent = '💰 Encaisser (fonds reçus)';
+        }
       });
     });
   }

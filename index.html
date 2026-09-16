@@ -444,6 +444,14 @@
   .momo-action{background:#FFCC00; color:#0e1b1c;}
   .pay-note{font-size:12px; color:var(--cream-dim); margin:4px 0 12px;}
   .pay-warning{font-size:11px; color:var(--cream-dim); margin-top:8px; line-height:1.5;}
+  .ussd-fallback{
+    font-size:12px; color:var(--cream-dim); margin-top:8px; padding:10px;
+    border:1px dashed var(--line); border-radius:8px; text-align:center;
+  }
+  .ussd-code{
+    margin-top:6px; font-size:16px; font-weight:700; letter-spacing:0.03em;
+    color:var(--gold); user-select:all; -webkit-user-select:all;
+  }
 
   @media (min-width:640px){
     .hero h1{font-size:56px;}
@@ -855,6 +863,10 @@
   <div class="pay-note">Le code de paiement se compose automatiquement avec le montant exact — il ne reste qu'à appuyer sur l'appel.</div>
   <button id="pay-om-btn" class="cart-action om-action">Payer avec Orange Money</button>
   <button id="pay-momo-btn" class="cart-action momo-action">Payer avec MTN MoMo</button>
+  <div id="ussd-fallback" class="ussd-fallback hidden">
+    L'appel ne s'est pas lancé automatiquement ? Composez ce code vous-même :
+    <div id="ussd-code" class="ussd-code" onclick="this.select && this.select()"></div>
+  </div>
   <div class="pay-warning">Après paiement, gardez la confirmation reçue et montrez-la au personnel pour valider votre commande.</div>
 </div>
 
@@ -1046,8 +1058,10 @@
   // Envoie la commande directement aux tablettes des serveurs (Firestore),
   // remplace l'ancien envoi de facture par WhatsApp.
   let orderSent = false;
+  let orderInFlight = false;
   async function sendOrderToTablets(statusNote, paymentMethod, location){
-    if(orderSent) return; // évite un doublon si l'utilisateur revient plusieurs fois sur la page
+    if(orderSent || orderInFlight) return; // évite un double-envoi pendant l'écriture ou après succès
+    orderInFlight = true;
     const name = await getCustomerName();
     if(!orderCounter) orderCounter = 'CMD-' + Date.now().toString().slice(-6);
 
@@ -1080,6 +1094,8 @@
     } catch(err){
       console.error('Erreur envoi commande :', err);
       await showModal('Problème de connexion', 'La commande n\'a pas pu être transmise. Vérifiez votre connexion et réessayez, ou signalez-le directement à un serveur.', '', true);
+    } finally {
+      orderInFlight = false;
     }
   }
 
@@ -1158,10 +1174,10 @@
     restaurant: { om: '1038766', momo: '643679' }
   };
 
-  // Paiement d'abord (redirection immédiate vers l'appli téléphone),
-  // puis la commande part automatiquement vers les tablettes dès le retour sur la page.
+  // La commande part vers la caissière au même instant que l'ouverture du
+  // clavier d'appel — plus besoin d'attendre le retour sur la page.
   async function payAndInvoice(method){
-    await getCustomerName(); // demande le nom AVANT de quitter la page pour payer
+    await getCustomerName(); // demande le nom une seule fois (mémorisé ensuite)
     const location = detectLocation();
     const codes = PAYMENT_CODES[location];
     const locationLabel = location === 'restaurant' ? 'Restaurant' : 'Rooftop';
@@ -1170,13 +1186,14 @@
       : '*126*4*' + codes.momo + '*' + cartTotal() + '#';
     const methodLabel = (method === 'om' ? 'Orange Money' : 'MTN MoMo') + ' — ' + locationLabel;
 
-    const sendOnReturn = () => {
-      if(document.visibilityState === 'visible'){
-        document.removeEventListener('visibilitychange', sendOnReturn);
-        sendOrderToTablets('Mode de paiement choisi : ' + methodLabel + ' (en attente de confirmation)', method, location);
-      }
-    };
-    document.addEventListener('visibilitychange', sendOnReturn);
+    // Affiche le code en texte au cas où l'appel ne se lance pas automatiquement
+    // (navigateur intégré d'une autre appli, permissions bloquées, etc.)
+    document.getElementById('ussd-code').textContent = telCode;
+    document.getElementById('ussd-fallback').classList.remove('hidden');
+
+    // Envoi immédiat à la caissière — le paiement n'est pas encore confirmé,
+    // elle devra vérifier la réception avant d'encaisser.
+    sendOrderToTablets('⚠️ Paiement par ' + methodLabel + ' — à vérifier avant d\'encaisser', method, location);
 
     window.location.href = 'tel:' + encodeURIComponent(telCode);
   }
