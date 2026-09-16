@@ -356,6 +356,14 @@
   }
 
   // ---------- Génération de la facture PDF soldée ----------
+  // Formatage des montants pour les PDF : la police standard des PDF ne sait
+  // pas afficher l'espace fine utilisée par le format français (elle
+  // s'affichait comme un "/"). On force donc ce format-ci : 4.000.00
+  function formatMontantPDF(n){
+    n = Math.round(n || 0);
+    return n.toLocaleString('en-US').replace(/,/g, '.') + '.00';
+  }
+
   function generateInvoicePDF(o){
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a5' });
@@ -396,7 +404,7 @@
 
     (o.items || []).forEach(it => {
       if(y > 190){ doc.addPage(); y = 20; }
-      const lineTotal = (it.price * it.qty).toLocaleString('fr-FR') + ' FCFA';
+      const lineTotal = formatMontantPDF(it.price * it.qty) + ' FCFA';
       doc.text(String(it.name).slice(0, 38), 14, y);
       doc.text(String(it.qty), 94, y);
       doc.text(lineTotal, 120, y, {align:'left'});
@@ -409,7 +417,7 @@
     y += 8;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);
-    doc.text('TOTAL : ' + (o.total||0).toLocaleString('fr-FR') + ' FCFA', 14, y);
+    doc.text('TOTAL : ' + formatMontantPDF(o.total||0) + ' FCFA', 14, y);
     y += 14;
 
     doc.setFillColor(...goldRGB);
