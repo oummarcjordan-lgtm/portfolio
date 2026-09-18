@@ -244,7 +244,21 @@
   function startApp(){
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
+    logConnection('Caisse');
     subscribeOrders();
+  }
+
+  // ---------- Journal des connexions (heures + PWA/Site web) ----------
+  function detectDevice(){
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    return isStandalone ? 'PWA' : 'Site web';
+  }
+  function logConnection(role){
+    db.collection('connections').add({
+      role: role,
+      device: detectDevice(),
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(err => console.warn('Log connexion impossible :', err));
   }
 
   // ---------- Libellés ----------

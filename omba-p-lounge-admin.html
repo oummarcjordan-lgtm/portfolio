@@ -182,6 +182,17 @@
     </div>
   </div>
 
+  <div id="connections-panel" class="panel-row hidden">
+    <div class="panel">
+      <h3>🔑 Connexions comptes (caisse + admin)</h3>
+      <div id="connections-log"><div class="panel-empty">Chargement…</div></div>
+    </div>
+    <div class="panel">
+      <h3>👀 Visites du menu (visiteurs)</h3>
+      <div id="visits-log"><div class="panel-empty">Chargement…</div></div>
+    </div>
+  </div>
+
   <div class="filters">
     <select id="filter-location">
       <option value="">Tous les lieux</option>
@@ -300,7 +311,51 @@
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
     document.getElementById('admin-name-val').textContent = currentAdminName || '';
+    logConnection(currentAdminName);
     subscribeArchive();
+    if(currentAdminName === 'Marc (Développeur)'){
+      document.getElementById('connections-panel').classList.remove('hidden');
+      subscribeConnectionsLog();
+      subscribeVisitsLog();
+    }
+  }
+
+  // ---------- Journal des connexions (heures + PWA/Site web) ----------
+  function detectDevice(){
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    return isStandalone ? 'PWA' : 'Site web';
+  }
+  function logConnection(role){
+    db.collection('connections').add({
+      role: role,
+      device: detectDevice(),
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(err => console.warn('Log connexion impossible :', err));
+  }
+  function subscribeConnectionsLog(){
+    db.collection('connections').orderBy('timestamp', 'desc').limit(50)
+      .onSnapshot((snap) => {
+        const el = document.getElementById('connections-log');
+        if(snap.empty){ el.innerHTML = '<div class="panel-empty">Aucune connexion enregistrée.</div>'; return; }
+        el.innerHTML = snap.docs.map(d => {
+          const c = d.data();
+          return '<div class="panel-row-line"><span class="name">' + (c.role||'—') + ' · ' + (c.device||'—') +
+            '</span><span class="val">' + fmtDateTime(c.timestamp) + '</span></div>';
+        }).join('');
+      }, err => console.warn('Lecture connexions impossible :', err));
+  }
+  function subscribeVisitsLog(){
+    db.collection('visits').orderBy('timestamp', 'desc').limit(50)
+      .onSnapshot((snap) => {
+        const el = document.getElementById('visits-log');
+        if(snap.empty){ el.innerHTML = '<div class="panel-empty">Aucune visite enregistrée.</div>'; return; }
+        el.innerHTML = snap.docs.map(d => {
+          const v = d.data();
+          const where = [v.location ? locLabel(v.location) : null, v.table ? ('Table ' + v.table) : null].filter(Boolean).join(' · ');
+          return '<div class="panel-row-line"><span class="name">' + (where || 'Visiteur') + ' · ' + (v.device||'—') +
+            '</span><span class="val">' + fmtDateTime(v.timestamp) + '</span></div>';
+        }).join('');
+      }, err => console.warn('Lecture visites impossible :', err));
   }
 
   document.getElementById('filter-location').addEventListener('change', renderAll);
