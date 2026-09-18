@@ -227,6 +227,38 @@
   };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+
+  // ======================================================================
+  // VERROU D'ACCÈS À DISTANCE — contrôlé depuis la console Firebase, sans
+  // avoir à republier de fichier. Document : system/access, champ "active"
+  // (true/false) et champ optionnel "message" (texte affiché si verrouillé).
+  // ======================================================================
+  function showAccessLock(message){
+    if(document.getElementById('access-lock-overlay')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'access-lock-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#f4f4f4;color:#3c3c3c;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;font-family:Arial,Helvetica,sans-serif;';
+    overlay.innerHTML =
+      '<div style="font-size:42px;margin-bottom:14px;color:#c0392b;">⚠️</div>' +
+      '<div style="font-size:20px;font-weight:700;margin-bottom:8px;color:#2b2b2b;">Erreur 402 — Service suspendu</div>' +
+      '<div style="color:#5a5a5a;font-size:14.5px;max-width:340px;line-height:1.6;margin-bottom:18px;">' +
+      (message || "L'accès à ce service a été suspendu suite à un problème de facturation sur l'abonnement associé. Le service sera automatiquement rétabli dès régularisation. Pour toute question, contactez votre prestataire technique.") +
+      '</div>' +
+      '<div style="font-size:11px;color:#9a9a9a;font-family:monospace;">Code d\'erreur : ORDR-402-SUBEXPIRED</div>';
+    document.body.appendChild(overlay);
+  }
+  function hideAccessLock(){
+    const el = document.getElementById('access-lock-overlay');
+    if(el) el.remove();
+  }
+  db.collection('system').doc('access').onSnapshot((snap) => {
+    const data = snap.exists ? snap.data() : { active: true };
+    if(data.active === false){
+      showAccessLock(data.message);
+    } else {
+      hideAccessLock();
+    }
+  }, (err) => console.warn('Verrou d\'accès : lecture impossible', err));
 </script>
 
 <script>
