@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>O'Mba'p Lounge — Tableau de bord</title>
+<title>OMJ — Tableau de bord</title>
 <link rel="manifest" href="manifest-admin.json">
 <meta name="theme-color" content="#0e1b1c">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -130,7 +130,7 @@
 <body>
 
 <div id="login-screen">
-  <h1>O'Mba'p <span>Lounge</span></h1>
+  <h1>O'Mba'p & <span>K Stay</span></h1>
   <h2 style="font-size:16px; color:var(--cream-dim); font-family:'Work Sans',sans-serif; font-weight:500;">Tableau de bord — Accès développeur</h2>
   <input id="login-pin" type="password" inputmode="numeric" maxlength="8" placeholder="Code d'accès">
   <button id="login-btn" type="button">Se connecter</button>
@@ -139,7 +139,7 @@
 
 <div id="app" class="hidden">
   <header>
-    <h1>O'Mba'p <span>Lounge</span> — Tableau de bord</h1>
+    <h1>O'Mba'p & <span>K Stay</span> — Tableau de bord</h1>
     <div style="text-align:right;">
       <div id="admin-name-val" style="font-size:12px; color:var(--gold); margin-bottom:4px;"></div>
       <button id="logout-btn" type="button">Se déconnecter</button>
@@ -194,6 +194,11 @@
   </div>
 
   <div class="filters">
+    <select id="filter-etablissement">
+      <option value="">Les deux établissements</option>
+      <option value="ombap">O'Mba'p Lounge</option>
+      <option value="kstay">K Stay</option>
+    </select>
     <select id="filter-location">
       <option value="">Tous les lieux</option>
       <option value="rooftop">Rooftop</option>
@@ -358,6 +363,7 @@
       }, err => console.warn('Lecture visites impossible :', err));
   }
 
+  document.getElementById('filter-etablissement').addEventListener('change', renderAll);
   document.getElementById('filter-location').addEventListener('change', renderAll);
   document.getElementById('filter-method').addEventListener('change', renderAll);
   document.getElementById('filter-status').addEventListener('change', renderAll);
@@ -370,6 +376,7 @@
 
   const PAYMENT_LABELS = { om: 'Orange Money', momo: 'MTN MoMo', terminal: 'Terminal (carte)', cash: 'Espèces' };
   function locLabel(loc){ return loc === 'restaurant' ? 'Restaurant' : 'Rooftop'; }
+  function etabLabel(o){ return o.etablissement === 'kstay' ? 'K Stay' : ('O\'Mba\'p — ' + locLabel(o.location)); }
   function fmtDateTime(ts){
     if(!ts || !ts.toDate) return '';
     return ts.toDate().toLocaleDateString('fr-FR') + ' ' + ts.toDate().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
@@ -402,8 +409,9 @@
     }, (err) => console.error(err));
   }
 
-  function computeDayStats(dateStr){
-    const dayOrders = allArchived.filter(o => orderDateKey(o) === dateStr);
+  function computeDayStats(dateStr, etabFilter){
+    let dayOrders = allArchived.filter(o => orderDateKey(o) === dateStr);
+    if(etabFilter) dayOrders = dayOrders.filter(o => (o.etablissement || 'ombap') === etabFilter);
     const validated = dayOrders.filter(o => orderOutcome(o) === 'validee');
     const cancelled = dayOrders.filter(o => orderOutcome(o) === 'annulee');
     const revenue = validated.reduce((s,o) => s + (o.total||0), 0);
@@ -417,11 +425,11 @@
       byMethod[m] = byMethod[m] || {count:0, total:0};
       byMethod[m].count++; byMethod[m].total += (o.total||0);
 
-      const l = o.location || 'inconnu';
+      const l = etabLabel(o);
       byLocation[l] = byLocation[l] || {count:0, total:0};
       byLocation[l].count++; byLocation[l].total += (o.total||0);
 
-      const t = 'Table ' + (o.table || '—') + ' (' + locLabel(o.location) + ')';
+      const t = 'Table ' + (o.table || '—') + ' (' + etabLabel(o) + ')';
       byTable[t] = byTable[t] || {count:0, total:0};
       byTable[t].count++; byTable[t].total += (o.total||0);
 
@@ -440,11 +448,12 @@
 
   function renderAll(){
     const dateStr = document.getElementById('filter-date').value || todayStr();
+    const etabFilter = document.getElementById('filter-etablissement').value;
     const locFilter = document.getElementById('filter-location').value;
     const methodFilter = document.getElementById('filter-method').value;
     const statusFilter = document.getElementById('filter-status').value;
 
-    const stats = computeDayStats(dateStr);
+    const stats = computeDayStats(dateStr, etabFilter);
 
     // ---------- Cartes resume ----------
     document.getElementById('stat-revenue').textContent = stats.revenue.toLocaleString('fr-FR');
@@ -463,7 +472,7 @@
     const locEl = document.getElementById('breakdown-location');
     const locEntries = Object.entries(stats.byLocation);
     locEl.innerHTML = locEntries.length ? locEntries.map(([l, v]) =>
-      `<div class="panel-row-line"><span class="name">${locLabel(l)}</span><span class="val">${v.count} · ${v.total.toLocaleString('fr-FR')} FCFA</span></div>`
+      `<div class="panel-row-line"><span class="name">${l}</span><span class="val">${v.count} · ${v.total.toLocaleString('fr-FR')} FCFA</span></div>`
     ).join('') : '<div class="panel-empty">Aucune donnée pour ce jour.</div>';
 
     // ---------- Top tables ----------
@@ -502,7 +511,7 @@
 
       card.innerHTML = `
         <div class="oc-head">
-          <div><span class="oc-table">Table n° ${o.table || '—'}</span><span class="oc-loc">${locLabel(o.location)}</span></div>
+          <div><span class="oc-table">Table n° ${o.table || '—'}</span><span class="oc-loc">${etabLabel(o)}</span></div>
           <div class="oc-meta">
             <div class="oc-name">${o.customerName || 'Client'}</div>
             <div>${fmtDateTime(o.archivedAt || o.paymentValidatedAt || o.createdAt)} · ${o.orderRef || ''}</div>
@@ -535,7 +544,9 @@
   // ---------- Rapport journalier PDF (pour le patron, simple a telecharger) ----------
   function downloadDailyReport(){
     const dateStr = document.getElementById('filter-date').value || todayStr();
-    const stats = computeDayStats(dateStr);
+    const etabFilter = document.getElementById('filter-etablissement').value;
+    const etabTitle = etabFilter === 'kstay' ? 'K Stay' : etabFilter === 'ombap' ? "O'Mba'p Lounge" : "O'Mba'p Lounge & K Stay";
+    const stats = computeDayStats(dateStr, etabFilter);
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const goldRGB = [194, 155, 15];
@@ -545,7 +556,7 @@
     doc.setTextColor(...navyRGB);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(20);
-    doc.text("O'Mba'p Lounge — Rapport journalier", 105, y, {align:'center'});
+    doc.text(etabTitle + " — Rapport journalier", 105, y, {align:'center'});
     y += 8;
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
@@ -594,7 +605,7 @@
     const locEntries = Object.entries(stats.byLocation);
     if(!locEntries.length){ doc.text('Aucune donnée.', 20, y); y += 6; }
     locEntries.forEach(([l,v]) => {
-      doc.text(locLabel(l) + ' — ' + v.count + ' commande(s)', 20, y);
+      doc.text(l + ' — ' + v.count + ' commande(s)', 20, y);
       doc.text(formatMontantPDF(v.total) + ' FCFA', 190, y, {align:'right'});
       y += 6;
     });
@@ -633,11 +644,11 @@
     doc.setTextColor(...navyRGB);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
-    doc.text("O'Mba'p Lounge", 74, y, {align:'center'});
+    doc.text(o.etablissement === 'kstay' ? "K STAY" : "O'Mba'p Lounge", 74, y, {align:'center'});
     y += 7;
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(locLabel(o.location) + ' — Table n° ' + (o.table || '—'), 74, y, {align:'center'});
+    doc.text((o.etablissement === 'kstay' ? '' : (locLabel(o.location) + ' — ')) + 'Table n° ' + (o.table || '—'), 74, y, {align:'center'});
     y += 9;
 
     doc.setDrawColor(...goldRGB);
@@ -693,7 +704,7 @@
     doc.text('Vivement de vous revoir très bientôt', 74, y, {align:'center'});
     y += 6;
     doc.setFont('helvetica', 'bold');
-    doc.text("O'Mba'p", 74, y, {align:'center'});
+    doc.text(o.etablissement === 'kstay' ? "K STAY" : "O'Mba'p", 74, y, {align:'center'});
 
     doc.save('facture-' + (o.orderRef || o.id) + '.pdf');
   }
