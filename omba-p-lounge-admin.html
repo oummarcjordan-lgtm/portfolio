@@ -37,6 +37,26 @@
   }
   #login-error{color:var(--ember); font-size:13px; min-height:18px;}
 
+  #etab-select-screen{
+    position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:18px; z-index:200; text-align:center; padding:30px;
+  }
+  #etab-select-screen h2{ font-size:15px; color:var(--cream-dim); font-family:'Work Sans',sans-serif; font-weight:500; margin-bottom:6px; }
+  .etab-choice-btn{
+    width:100%; max-width:320px; padding:20px 22px; border-radius:16px; border:1px solid var(--line);
+    background:var(--bg-card); color:var(--cream); font-family:'Fraunces', serif; font-size:22px; font-weight:700;
+    cursor:pointer; text-align:left; display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .etab-choice-btn small{ display:block; font-family:'Work Sans',sans-serif; font-size:12px; font-weight:500; color:var(--cream-dim); margin-top:4px; }
+  .etab-choice-btn.ombap{ border-color: rgba(242,183,5,0.4); }
+  .etab-choice-btn.kstay{ border-color: rgba(201,162,75,0.4); }
+  .etab-choice-btn:active{ transform: scale(0.98); }
+  #etab-both-link{ background:none; border:none; color:var(--cream-dim); font-size:13px; text-decoration:underline; cursor:pointer; margin-top:6px; font-family:'Work Sans',sans-serif; }
+  #switch-etab-btn{
+    background:none; border:1px solid var(--line); color:var(--cream-dim); padding:6px 12px; border-radius:20px;
+    font-size:11px; cursor:pointer; font-family:'Work Sans',sans-serif; margin-top:6px;
+  }
+
   header{
     padding:18px 20px 14px; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:20;
     background:var(--bg); display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -137,11 +157,24 @@
   <div id="login-error"></div>
 </div>
 
+<div id="etab-select-screen" class="hidden">
+  <h1 style="font-size:22px;">Quel établissement ?</h1>
+  <h2>Choisissez le tableau de bord à consulter</h2>
+  <button type="button" class="etab-choice-btn ombap" data-etab="ombap">
+    O'Mba'p Lounge <small>Rooftop · Restaurant · Grill · Pizzeria</small>
+  </button>
+  <button type="button" class="etab-choice-btn kstay" data-etab="kstay">
+    K Stay <small>Meublés · Lounge · Restaurant</small>
+  </button>
+  <button type="button" id="etab-both-link">Voir les deux établissements ensemble</button>
+</div>
+
 <div id="app" class="hidden">
   <header>
-    <h1>O'Mba'p & <span>K Stay</span> — Tableau de bord</h1>
+    <h1 id="app-title">O'Mba'p & <span>K Stay</span> — Tableau de bord</h1>
     <div style="text-align:right;">
       <div id="admin-name-val" style="font-size:12px; color:var(--gold); margin-bottom:4px;"></div>
+      <button id="switch-etab-btn" type="button">🔀 Changer d'établissement</button>
       <button id="logout-btn" type="button">Se déconnecter</button>
     </div>
   </header>
@@ -194,7 +227,7 @@
   </div>
 
   <div class="filters">
-    <select id="filter-etablissement">
+    <select id="filter-etablissement" class="hidden"><!-- pilotée par l'écran de choix, plus par l'utilisateur -->
       <option value="">Les deux établissements</option>
       <option value="ombap">O'Mba'p Lounge</option>
       <option value="kstay">K Stay</option>
@@ -300,20 +333,48 @@
     }
     currentAdminName = ADMIN_CODES[pin];
     sessionStorage.setItem('omjAdminOk', pin);
-    startApp();
+    showEtabSelect();
   }
   document.getElementById('logout-btn').addEventListener('click', () => {
     sessionStorage.removeItem('omjAdminOk');
     location.reload();
   });
+  document.getElementById('switch-etab-btn').addEventListener('click', () => {
+    document.getElementById('app').classList.add('hidden');
+    showEtabSelect();
+  });
+  document.querySelectorAll('.etab-choice-btn').forEach(btn => {
+    btn.addEventListener('click', () => chooseEtab(btn.dataset.etab));
+  });
+  document.getElementById('etab-both-link').addEventListener('click', () => chooseEtab(''));
+
   const savedPin = sessionStorage.getItem('omjAdminOk');
   if(savedPin && ADMIN_CODES[savedPin]){
     currentAdminName = ADMIN_CODES[savedPin];
   }
-  if(currentAdminName){ startApp(); }
+  if(currentAdminName){ showEtabSelect(); }
+
+  function showEtabSelect(){
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('etab-select-screen').classList.remove('hidden');
+  }
+
+  const ETAB_TITLES = {
+    'ombap': "O'Mba'p Lounge — Tableau de bord",
+    'kstay': "K Stay — Tableau de bord",
+    '': "O'Mba'p & <span>K Stay</span> — Tableau de bord"
+  };
+
+  function chooseEtab(etab){
+    document.getElementById('filter-etablissement').value = etab;
+    document.getElementById('app-title').innerHTML = ETAB_TITLES[etab];
+    // le filtre "lieu" (Rooftop/Restaurant) ne concerne que O'Mba'p
+    document.getElementById('filter-location').style.display = (etab === 'kstay') ? 'none' : '';
+    document.getElementById('etab-select-screen').classList.add('hidden');
+    startApp();
+  }
 
   function startApp(){
-    document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app').classList.remove('hidden');
     document.getElementById('admin-name-val').textContent = currentAdminName || '';
     logConnection(currentAdminName);
