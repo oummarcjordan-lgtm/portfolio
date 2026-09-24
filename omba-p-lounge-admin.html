@@ -217,11 +217,11 @@
 
   <div id="connections-panel" class="panel-row hidden">
     <div class="panel">
-      <h3>🔑 Connexions comptes (caisse + admin)</h3>
+      <h3>🔑 Connexions comptes (caisse + admin) <small style="font-weight:400; color:var(--cream-dim); font-size:11px;">— jour et établissement sélectionnés ci-dessus</small></h3>
       <div id="connections-log"><div class="panel-empty">Chargement…</div></div>
     </div>
     <div class="panel">
-      <h3>👀 Visites du menu (visiteurs)</h3>
+      <h3>👀 Visites du menu (visiteurs) <small style="font-weight:400; color:var(--cream-dim); font-size:11px;">— jour et établissement sélectionnés ci-dessus</small></h3>
       <div id="visits-log"><div class="panel-empty">Chargement…</div></div>
     </div>
   </div>
@@ -386,42 +386,68 @@
     }
   }
 
-  // ---------- Journal des connexions (heures + PWA/Site web) ----------
+  // ---------- Journal des connexions (heures + PWA/Site web), separe par etablissement et par jour ----------
   function detectDevice(){
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     return isStandalone ? 'PWA' : 'Site web';
   }
   function logConnection(role){
+    const etab = document.getElementById('filter-etablissement').value;
     db.collection('connections').add({
       role: role,
       device: detectDevice(),
+      etablissement: etab || 'both',
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     }).catch(err => console.warn('Log connexion impossible :', err));
   }
+
+  let allConnections = [];
+  let allVisits = [];
+
   function subscribeConnectionsLog(){
-    db.collection('connections').orderBy('timestamp', 'desc').limit(50)
+    db.collection('connections').orderBy('timestamp', 'desc').limit(500)
       .onSnapshot((snap) => {
-        const el = document.getElementById('connections-log');
-        if(snap.empty){ el.innerHTML = '<div class="panel-empty">Aucune connexion enregistrée.</div>'; return; }
-        el.innerHTML = snap.docs.map(d => {
-          const c = d.data();
-          return '<div class="panel-row-line"><span class="name">' + (c.role||'—') + ' · ' + (c.device||'—') +
-            '</span><span class="val">' + fmtDateTime(c.timestamp) + '</span></div>';
-        }).join('');
+        allConnections = snap.docs.map(d => ({id:d.id, ...d.data()}));
+        renderConnectionsAndVisits();
       }, err => console.warn('Lecture connexions impossible :', err));
   }
   function subscribeVisitsLog(){
-    db.collection('visits').orderBy('timestamp', 'desc').limit(50)
+    db.collection('visits').orderBy('timestamp', 'desc').limit(500)
       .onSnapshot((snap) => {
-        const el = document.getElementById('visits-log');
-        if(snap.empty){ el.innerHTML = '<div class="panel-empty">Aucune visite enregistrée.</div>'; return; }
-        el.innerHTML = snap.docs.map(d => {
-          const v = d.data();
-          const where = [v.location ? locLabel(v.location) : null, v.table ? ('Table ' + v.table) : null].filter(Boolean).join(' · ');
-          return '<div class="panel-row-line"><span class="name">' + (where || 'Visiteur') + ' · ' + (v.device||'—') +
-            '</span><span class="val">' + fmtDateTime(v.timestamp) + '</span></div>';
-        }).join('');
+        allVisits = snap.docs.map(d => ({id:d.id, ...d.data()}));
+        renderConnectionsAndVisits();
       }, err => console.warn('Lecture visites impossible :', err));
+  }
+
+  function renderConnectionsAndVisits(){
+    const connEl = document.getElementById('connections-log');
+    const visitEl = document.getElementById('visits-log');
+    if(!connEl || !visitEl) return;
+    const dateStr = document.getElementById('filter-date').value || todayStr();
+    const etabFilter = document.getElementById('filter-etablissement').value;
+
+    let dayConn = allConnections.filter(c => tsDateKey(c.timestamp) === dateStr);
+    if(etabFilter) dayConn = dayConn.filter(c => (c.etablissement || 'ombap') === etabFilter);
+    if(dayConn.length === 0){
+      connEl.innerHTML = '<div class="panel-empty">Aucune connexion ce jour-là.</div>';
+    } else {
+      connEl.innerHTML = dayConn.map(c =>
+        '<div class="panel-row-line"><span class="name">' + (c.role||'—') + ' · ' + (c.device||'—') + ' · ' + etabShortLabel(c) +
+        '</span><span class="val">' + fmtDateTime(c.timestamp) + '</span></div>'
+      ).join('');
+    }
+
+    let dayVisits = allVisits.filter(v => tsDateKey(v.timestamp) === dateStr);
+    if(etabFilter) dayVisits = dayVisits.filter(v => (v.etablissement || 'ombap') === etabFilter);
+    if(dayVisits.length === 0){
+      visitEl.innerHTML = '<div class="panel-empty">Aucune visite ce jour-là.</div>';
+    } else {
+      visitEl.innerHTML = dayVisits.map(v => {
+        const where = [v.location ? locLabel(v.location) : null, v.table ? ('Table ' + v.table) : null].filter(Boolean).join(' · ');
+        return '<div class="panel-row-line"><span class="name">' + (where || 'Visiteur') + ' · ' + (v.device||'—') + ' · ' + etabShortLabel(v) +
+          '</span><span class="val">' + fmtDateTime(v.timestamp) + '</span></div>';
+      }).join('');
+    }
   }
 
   document.getElementById('filter-etablissement').addEventListener('change', renderAll);
@@ -456,6 +482,15 @@
   }
   function orderOutcome(o){
     return o.orderStatus || (o.paymentStatus === 'validee' ? 'validee' : 'inconnu');
+  }
+  function tsDateKey(ts){
+    if(!ts || !ts.toDate) return null;
+    const d = ts.toDate();
+    const off = d.getTimezoneOffset();
+    return new Date(d.getTime() - off*60000).toISOString().slice(0,10);
+  }
+  function etabShortLabel(x){
+    return x.etablissement === 'kstay' ? 'K Stay' : "O'Mba'p";
   }
 
   document.getElementById('filter-date').value = todayStr();
@@ -515,6 +550,7 @@
     const statusFilter = document.getElementById('filter-status').value;
 
     const stats = computeDayStats(dateStr, etabFilter);
+    renderConnectionsAndVisits();
 
     // ---------- Cartes resume ----------
     document.getElementById('stat-revenue').textContent = stats.revenue.toLocaleString('fr-FR');
