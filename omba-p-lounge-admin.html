@@ -112,6 +112,12 @@
   .panel-row-line .name{color:var(--cream);}
   .panel-row-line .val{color:var(--cream-dim); text-align:right;}
   .panel-empty{font-size:12px; color:var(--cream-dim); text-align:center; padding:10px 0;}
+  .presence-dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; vertical-align:middle;}
+  .presence-dot.online{background:#3ecf6a; box-shadow:0 0 6px #3ecf6a;}
+  .presence-dot.offline{background:#8a8a8a;}
+  .presence-row{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--line);}
+  .presence-row:last-child{border-bottom:none;}
+  .presence-detail{font-size:11px; color:var(--cream-dim); margin-top:2px;}
 
   .filters{
     display:flex; gap:8px; padding:12px 14px; max-width:680px; margin:0 auto; flex-wrap:wrap;
@@ -251,6 +257,13 @@
     </select>
   </div>
 
+  <div class="panel-row" id="presence-panel">
+    <div class="panel" style="grid-column: 1 / -1;">
+      <h3>🟢 Présence caissière (en direct)</h3>
+      <div id="presence-log"><div class="panel-empty">Chargement…</div></div>
+    </div>
+  </div>
+
   <main>
     <div id="empty-state" class="empty-state hidden">
       <div class="big">🗂️</div>
@@ -379,6 +392,7 @@
     document.getElementById('admin-name-val').textContent = currentAdminName || '';
     logConnection(currentAdminName);
     subscribeArchive();
+    subscribePresence();
     if(currentAdminName === 'Marc (Développeur)'){
       document.getElementById('connections-panel').classList.remove('hidden');
       subscribeConnectionsLog();
@@ -493,6 +507,46 @@
     return x.etablissement === 'kstay' ? 'K Stay' : "O'Mba'p";
   }
 
+  // ---------- Présence en direct de la caissière (en ligne / hors ligne) ----------
+  let presenceData = {};
+  let presenceSubscribed = false;
+  const ONLINE_THRESHOLD_MS = 90000; // pas de battement depuis 90s = considérée hors ligne
+
+  function subscribePresence(){
+    if(presenceSubscribed) return;
+    presenceSubscribed = true;
+    db.collection('presence').onSnapshot((snap) => {
+      presenceData = {};
+      snap.docs.forEach(d => { presenceData[d.id] = d.data(); });
+      renderPresence();
+    }, err => console.warn('Lecture présence impossible :', err));
+    setInterval(renderPresence, 15000); // réévalue "en ligne" même sans nouvelle donnée reçue
+  }
+
+  function renderPresence(){
+    const el = document.getElementById('presence-log');
+    if(!el) return;
+    const etabFilter = document.getElementById('filter-etablissement').value;
+    const docs = Object.entries(presenceData).filter(([id, p]) => !etabFilter || p.etablissement === etabFilter);
+    if(docs.length === 0){
+      el.innerHTML = '<div class="panel-empty">Aucune caissière enregistrée pour le moment.</div>';
+      return;
+    }
+    const now = Date.now();
+    el.innerHTML = docs.map(([id, p]) => {
+      const lastMs = (p.lastActive && p.lastActive.toMillis) ? p.lastActive.toMillis() : 0;
+      const isOnline = p.status === 'online' && (now - lastMs) < ONLINE_THRESHOLD_MS;
+      const sinceLabel = isOnline
+        ? ('Connectée depuis ' + fmtDateTime(p.loginAt))
+        : (p.loggedOutAt ? ('Déconnectée à ' + fmtDateTime(p.loggedOutAt)) : (lastMs ? ('Dernière activité : ' + fmtDateTime(p.lastActive)) : 'Jamais connectée'));
+      return '<div class="presence-row">' +
+        '<div><span class="presence-dot ' + (isOnline ? 'online' : 'offline') + '"></span><b>' + (p.role || 'Caisse') + ' · ' + etabShortLabel(p) + '</b>' +
+        '<div class="presence-detail">' + (isOnline ? 'En ligne — ' : '') + sinceLabel + '</div></div>' +
+        '<div style="text-align:right; font-size:12px; color:var(--cream-dim);">' + (p.device || '—') + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
   document.getElementById('filter-date').value = todayStr();
 
   let allArchived = [];
@@ -551,6 +605,7 @@
 
     const stats = computeDayStats(dateStr, etabFilter);
     renderConnectionsAndVisits();
+    renderPresence();
 
     // ---------- Cartes resume ----------
     document.getElementById('stat-revenue').textContent = stats.revenue.toLocaleString('fr-FR');
@@ -610,7 +665,7 @@
         <div class="oc-head">
           <div><span class="oc-table">Table n° ${o.table || '—'}</span><span class="oc-loc">${etabLabel(o)}</span></div>
           <div class="oc-meta">
-            <div class="oc-name">${o.customerName || 'Client'}</div>
+            <div class="oc-name">${o.customerName || 'Client'} · 📞 ${o.customerPhone || '—'}</div>
             <div>${fmtDateTime(o.archivedAt || o.paymentValidatedAt || o.createdAt)} · ${o.orderRef || ''}</div>
           </div>
         </div>
@@ -757,6 +812,7 @@
     doc.text('N° commande : ' + (o.orderRef || '—'), 14, y); y += 6;
     doc.text('Date : ' + fmtDateTime(o.paymentValidatedAt || o.createdAt), 14, y); y += 6;
     doc.text('Client : ' + (o.customerName || '—'), 14, y); y += 6;
+    doc.text('Téléphone : ' + (o.customerPhone || 'Non renseigné'), 14, y); y += 6;
     doc.text('Mode de paiement : ' + (PAYMENT_LABELS[o.paymentMethod] || '—'), 14, y); y += 10;
 
     doc.setFont('helvetica', 'bold');
