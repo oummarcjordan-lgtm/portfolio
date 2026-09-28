@@ -50,6 +50,7 @@
   .etab-choice-btn small{ display:block; font-family:'Work Sans',sans-serif; font-size:12px; font-weight:500; color:var(--cream-dim); margin-top:4px; }
   .etab-choice-btn.ombap{ border-color: rgba(242,183,5,0.4); }
   .etab-choice-btn.kstay{ border-color: rgba(201,162,75,0.4); }
+  .etab-choice-btn.kdreams{ border-color: rgba(212,175,55,0.5); }
   .etab-choice-btn:active{ transform: scale(0.98); }
   #etab-both-link{ background:none; border:none; color:var(--cream-dim); font-size:13px; text-decoration:underline; cursor:pointer; margin-top:6px; font-family:'Work Sans',sans-serif; }
   #switch-etab-btn{
@@ -156,7 +157,7 @@
 <body>
 
 <div id="login-screen">
-  <h1>O'Mba'p & <span>K Stay</span></h1>
+  <h1>O'Mba'p, <span>K Stay</span> & K-Dreams</h1>
   <h2 style="font-size:16px; color:var(--cream-dim); font-family:'Work Sans',sans-serif; font-weight:500;">Tableau de bord — Accès développeur</h2>
   <input id="login-pin" type="password" inputmode="numeric" maxlength="8" placeholder="Code d'accès">
   <button id="login-btn" type="button">Se connecter</button>
@@ -172,12 +173,15 @@
   <button type="button" class="etab-choice-btn kstay" data-etab="kstay">
     K Stay <small>Meublés · Lounge · Restaurant</small>
   </button>
-  <button type="button" id="etab-both-link">Voir les deux établissements ensemble</button>
+  <button type="button" class="etab-choice-btn kdreams" data-etab="kdreams">
+    K-Dreams <small>Restaurant · Rooftop · Jeux · Cigare · Boîte de nuit · Hébergement</small>
+  </button>
+  <button type="button" id="etab-both-link">Voir tous les établissements ensemble</button>
 </div>
 
 <div id="app" class="hidden">
   <header>
-    <h1 id="app-title">O'Mba'p & <span>K Stay</span> — Tableau de bord</h1>
+    <h1 id="app-title">O'Mba'p, <span>K Stay</span> & K-Dreams — Tableau de bord</h1>
     <div style="text-align:right;">
       <div id="admin-name-val" style="font-size:12px; color:var(--gold); margin-bottom:4px;"></div>
       <button id="switch-etab-btn" type="button">🔀 Changer d'établissement</button>
@@ -198,6 +202,8 @@
     <div class="stat-card"><div class="num" id="stat-cancelled">0</div><div class="lbl">Commandes annulées</div></div>
     <div class="stat-card"><div class="num" id="stat-orders-count">0</div><div class="lbl">Total commandes du jour</div></div>
   </div>
+
+  <div id="unpriced-note" class="hidden" style="color:#E0A526;font-size:12px;margin:0 0 12px;"></div>
 
   <div class="panel-row">
     <div class="panel">
@@ -234,9 +240,10 @@
 
   <div class="filters">
     <select id="filter-etablissement" class="hidden"><!-- pilotée par l'écran de choix, plus par l'utilisateur -->
-      <option value="">Les deux établissements</option>
+      <option value="">Tous les établissements</option>
       <option value="ombap">O'Mba'p Lounge</option>
       <option value="kstay">K Stay</option>
+      <option value="kdreams">K-Dreams</option>
     </select>
     <select id="filter-location">
       <option value="">Tous les lieux</option>
@@ -375,14 +382,25 @@
   const ETAB_TITLES = {
     'ombap': "O'Mba'p Lounge — Tableau de bord",
     'kstay': "K Stay — Tableau de bord",
-    '': "O'Mba'p & <span>K Stay</span> — Tableau de bord"
+    'kdreams': "K-Dreams — Tableau de bord",
+    '': "O'Mba'p, <span>K Stay</span> & K-Dreams — Tableau de bord"
   };
 
   function chooseEtab(etab){
     document.getElementById('filter-etablissement').value = etab;
     document.getElementById('app-title').innerHTML = ETAB_TITLES[etab];
-    // le filtre "lieu" (Rooftop/Restaurant) ne concerne que O'Mba'p
-    document.getElementById('filter-location').style.display = (etab === 'kstay') ? 'none' : '';
+    // le filtre "lieu" dépend de l'établissement choisi (masqué pour K Stay et pour la vue globale)
+    const locSel = document.getElementById('filter-location');
+    locSel.value = '';
+    if(etab === 'ombap'){
+      locSel.innerHTML = '<option value="">Tous les lieux</option><option value="rooftop">Rooftop</option><option value="restaurant">Restaurant</option>';
+      locSel.style.display = '';
+    } else if(etab === 'kdreams'){
+      locSel.innerHTML = '<option value="">Tous les espaces</option>' + Object.entries(KD_LABELS).map(([k,v]) => '<option value="'+k+'">'+v+'</option>').join('');
+      locSel.style.display = '';
+    } else {
+      locSel.style.display = 'none';
+    }
     document.getElementById('etab-select-screen').classList.add('hidden');
     startApp();
   }
@@ -476,8 +494,14 @@
   document.getElementById('download-report-btn').addEventListener('click', downloadDailyReport);
 
   const PAYMENT_LABELS = { om: 'Orange Money', momo: 'MTN MoMo', terminal: 'Terminal (carte)', cash: 'Espèces' };
+  const KD_LABELS = { restaurant:'Restaurant', rooftop:'Rooftop', salle_de_jeu:'Salle de jeu', espace_cigare:'Espace cigare', boite_de_nuit:'Boîte de nuit', hebergement:'Hébergement' };
   function locLabel(loc){ return loc === 'restaurant' ? 'Restaurant' : 'Rooftop'; }
-  function etabLabel(o){ return o.etablissement === 'kstay' ? 'K Stay' : ('O\'Mba\'p — ' + locLabel(o.location)); }
+  function etabLabel(o){
+    if(o.etablissement === 'kstay') return 'K Stay';
+    if(o.etablissement === 'kdreams') return 'K-Dreams — ' + (KD_LABELS[o.location] || o.location || '—');
+    return 'O\'Mba\'p — ' + locLabel(o.location);
+  }
+  function linePriceLabel(it){ return (it.price === null || it.price === undefined) ? 'à confirmer' : ((it.price*it.qty).toLocaleString('fr-FR') + ' FCFA'); }
   function fmtDateTime(ts){
     if(!ts || !ts.toDate) return '';
     return ts.toDate().toLocaleDateString('fr-FR') + ' ' + ts.toDate().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
@@ -504,7 +528,7 @@
     return new Date(d.getTime() - off*60000).toISOString().slice(0,10);
   }
   function etabShortLabel(x){
-    return x.etablissement === 'kstay' ? 'K Stay' : "O'Mba'p";
+    return x.etablissement === 'kstay' ? 'K Stay' : x.etablissement === 'kdreams' ? 'K-Dreams' : "O'Mba'p";
   }
 
   // ---------- Présence en direct de la caissière (en ligne / hors ligne) ----------
@@ -550,13 +574,46 @@
   document.getElementById('filter-date').value = todayStr();
 
   let allArchived = [];
+  let archMain = [];
+  let archKD = [];
+  let archiveSubscribed = false;
+
+  // Convertit un document K-Dreams (kdreams_archive) vers le format commun du tableau de bord
+  function normKD(d){
+    const ts = (ms) => (typeof ms === 'number') ? firebase.firestore.Timestamp.fromMillis(ms) : null;
+    const closed = ts(d.closedMs) || d.closedAt || null;
+    return {
+      id: 'kd_' + d.id,
+      etablissement: 'kdreams',
+      location: d.espace,
+      table: d.table,
+      items: (d.items || []).map(i => ({ name: i.nom, qty: i.q, price: (i.prix === null || i.prix === undefined) ? null : i.prix })),
+      total: d.total || 0,
+      paymentMethod: ({ mtn:'momo', orange:'om', terminal:'terminal', especes:'cash' })[d.payMode] || d.payMode,
+      orderStatus: d.orderStatus,
+      archivedAt: closed,
+      createdAt: ts(d.createdMs) || d.createdAt || closed,
+      cancelReason: d.motif || '',
+      hasUnpriced: !!d.hasUnpriced
+    };
+  }
+  function mergeArchive(){
+    allArchived = archMain.concat(archKD).sort((a,b) =>
+      (b.archivedAt?.toMillis?.() || b.paymentValidatedAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0) -
+      (a.archivedAt?.toMillis?.() || a.paymentValidatedAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0));
+    renderAll();
+  }
   function subscribeArchive(){
+    if(archiveSubscribed) { renderAll(); return; }
+    archiveSubscribed = true;
     db.collection('archive').onSnapshot((snap) => {
-      allArchived = snap.docs
-        .map(d => ({id: d.id, ...d.data()}))
-        .sort((a,b) => (b.archivedAt?.toMillis?.() || b.paymentValidatedAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0) - (a.archivedAt?.toMillis?.() || a.paymentValidatedAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0));
-      renderAll();
+      archMain = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      mergeArchive();
     }, (err) => console.error(err));
+    db.collection('kdreams_archive').onSnapshot((snap) => {
+      archKD = snap.docs.map(d => normKD({id: d.id, ...d.data()}));
+      mergeArchive();
+    }, (err) => console.error('K-Dreams archive :', err));
   }
 
   function computeDayStats(dateStr, etabFilter){
@@ -613,6 +670,11 @@
     document.getElementById('stat-cancelled').textContent = stats.cancelled.length;
     document.getElementById('stat-orders-count').textContent = stats.dayOrders.length;
 
+    const noteEl = document.getElementById('unpriced-note');
+    const nUnp = stats.validated.filter(o => o.hasUnpriced).length;
+    noteEl.classList.toggle('hidden', nUnp === 0);
+    if(nUnp) noteEl.textContent = nUnp + ' commande(s) K-Dreams validée(s) contenaient des articles sans prix : le total réel est supérieur au total affiché.';
+
     // ---------- Panneau paiement ----------
     const payEl = document.getElementById('breakdown-payment');
     const methodEntries = Object.entries(stats.byMethod);
@@ -654,7 +716,7 @@
       const outcome = orderOutcome(o);
       card.className = 'order-card' + (outcome === 'annulee' ? ' cancelled' : '');
       const itemsHtml = (o.items || []).map(it =>
-        `<div class="oc-item"><span><span class="qty">${it.qty}×</span> ${it.name}</span><span>${(it.price*it.qty).toLocaleString('fr-FR')} FCFA</span></div>`
+        `<div class="oc-item"><span><span class="qty">${it.qty}×</span> ${it.name}</span><span>${linePriceLabel(it)}</span></div>`
       ).join('');
       const methodLabel = PAYMENT_LABELS[o.paymentMethod] || 'Non précisé';
       const statusLine = outcome === 'annulee'
@@ -697,7 +759,7 @@
   function downloadDailyReport(){
     const dateStr = document.getElementById('filter-date').value || todayStr();
     const etabFilter = document.getElementById('filter-etablissement').value;
-    const etabTitle = etabFilter === 'kstay' ? 'K Stay' : etabFilter === 'ombap' ? "O'Mba'p Lounge" : "O'Mba'p Lounge & K Stay";
+    const etabTitle = etabFilter === 'kstay' ? 'K Stay' : etabFilter === 'ombap' ? "O'Mba'p Lounge" : etabFilter === 'kdreams' ? 'K-Dreams' : "O'Mba'p, K Stay & K-Dreams";
     const stats = computeDayStats(dateStr, etabFilter);
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
@@ -782,7 +844,7 @@
       y += 6;
     });
 
-    doc.save('rapport-omba-p-lounge-' + dateStr + '.pdf');
+    doc.save('rapport-' + (etabFilter || 'tous') + '-' + dateStr + '.pdf');
   }
 
   // ---------- Génération de la facture PDF (identique à l'interface caisse) ----------
@@ -796,11 +858,11 @@
     doc.setTextColor(...navyRGB);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
-    doc.text(o.etablissement === 'kstay' ? "K STAY" : "O'Mba'p Lounge", 74, y, {align:'center'});
+    doc.text(o.etablissement === 'kstay' ? "K STAY" : o.etablissement === 'kdreams' ? "K-DREAMS" : "O'Mba'p Lounge", 74, y, {align:'center'});
     y += 7;
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text((o.etablissement === 'kstay' ? '' : (locLabel(o.location) + ' — ')) + 'Table n° ' + (o.table || '—'), 74, y, {align:'center'});
+    doc.text((o.etablissement === 'kstay' ? '' : o.etablissement === 'kdreams' ? ((KD_LABELS[o.location] || '') + ' — ') : (locLabel(o.location) + ' — ')) + 'Table n° ' + (o.table || '—'), 74, y, {align:'center'});
     y += 9;
 
     doc.setDrawColor(...goldRGB);
@@ -828,7 +890,7 @@
 
     (o.items || []).forEach(it => {
       if(y > 190){ doc.addPage(); y = 20; }
-      const lineTotal = formatMontantPDF(it.price * it.qty) + ' FCFA';
+      const lineTotal = (it.price === null || it.price === undefined) ? 'a confirmer' : (formatMontantPDF(it.price * it.qty) + ' FCFA');
       doc.text(String(it.name).slice(0, 38), 14, y);
       doc.text(String(it.qty), 94, y);
       doc.text(lineTotal, 120, y, {align:'left'});
@@ -858,7 +920,7 @@
     doc.text('Vivement de vous revoir très bientôt', 74, y, {align:'center'});
     y += 6;
     doc.setFont('helvetica', 'bold');
-    doc.text(o.etablissement === 'kstay' ? "K STAY" : "O'Mba'p", 74, y, {align:'center'});
+    doc.text(o.etablissement === 'kstay' ? "K STAY" : o.etablissement === 'kdreams' ? "K-DREAMS" : "O'Mba'p", 74, y, {align:'center'});
 
     doc.save('facture-' + (o.orderRef || o.id) + '.pdf');
   }
