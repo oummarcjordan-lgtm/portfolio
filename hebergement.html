@@ -120,7 +120,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const ESPACE = {"main": "hebergement"};
 const TABLE = parseInt(new URLSearchParams(location.search).get('table')) || null;
-const DATA = {"main": [{"c": "Appartement & Suite", "i": [["Appartement", 100000, "", null], ["Suite 106", 75000, "", null]]}, {"c": "Grandes Chambres", "i": [["Grande Chambre 204", 40000, "", null], ["Grande Chambre 201", 40000, "", null], ["Grande Chambre 101", 40000, "", null], ["Grande Chambre 104", 40000, "", null], ["Grande Chambre 108", 40000, "", null]]}, {"c": "Petites Chambres", "i": [["Petite Chambre 102", 30000, "", null], ["Petite Chambre 103", 30000, "", null], ["Petite Chambre 206", 30000, "", null], ["Petite Chambre 205", 30000, "", null], ["Petite Chambre 202", 30000, "", null], ["Petite Chambre 207", 30000, "", null], ["Petite Chambre 203", 30000, "", null], ["Petite Chambre 105 Rami", null, "", null]]}]};
+const DATA = {"main": [{"c": "Nos chambres", "i": [["Chambre Lys", 20000, "", null], ["Chambre Jonquille", 25000, "", null], ["Suite Hortensia", 35000, "", null], ["Appartement Tournesol", 50000, "", null], ["Sieste — Petite chambre", 10000, "Séjour de 2 heures", null], ["Sieste — Grande chambre", 15000, "Séjour de 2 heures", null]]}]};
 const PAY = {"main": {"mtn": {"type": "perso", "val": "673807918"}, "orange": {"type": "perso", "val": "657996671"}}};
 let ctx = "main";
 let cart = {};
