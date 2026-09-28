@@ -501,6 +501,7 @@
     if(o.etablissement === 'kdreams') return 'K-Dreams — ' + (KD_LABELS[o.location] || o.location || '—');
     return 'O\'Mba\'p — ' + locLabel(o.location);
   }
+  function escH(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function linePriceLabel(it){ return (it.price === null || it.price === undefined) ? 'à confirmer' : ((it.price*it.qty).toLocaleString('fr-FR') + ' FCFA'); }
   function fmtDateTime(ts){
     if(!ts || !ts.toDate) return '';
@@ -594,7 +595,9 @@
       archivedAt: closed,
       createdAt: ts(d.createdMs) || d.createdAt || closed,
       cancelReason: d.motif || '',
-      hasUnpriced: !!d.hasUnpriced
+      hasUnpriced: !!d.hasUnpriced,
+      customerName: d.customerName || '',
+      customerPhone: d.customerPhone || ''
     };
   }
   function mergeArchive(){
@@ -720,14 +723,14 @@
       ).join('');
       const methodLabel = PAYMENT_LABELS[o.paymentMethod] || 'Non précisé';
       const statusLine = outcome === 'annulee'
-        ? `<div class="oc-payment cancelled">✕ Annulée${o.cancelReason ? ' — ' + o.cancelReason : ''}</div>`
+        ? `<div class="oc-payment cancelled">✕ Annulée${o.cancelReason ? ' — ' + escH(o.cancelReason) : ''}</div>`
         : `<div class="oc-payment">✓ Encaissé — <b>${methodLabel}</b></div>`;
 
       card.innerHTML = `
         <div class="oc-head">
           <div><span class="oc-table">Table n° ${o.table || '—'}</span><span class="oc-loc">${etabLabel(o)}</span></div>
           <div class="oc-meta">
-            <div class="oc-name">${o.customerName || 'Client'} · 📞 ${o.customerPhone || '—'}</div>
+            <div class="oc-name">${escH(o.customerName || 'Client')} · 📞 ${escH(o.customerPhone || '—')}</div>
             <div>${fmtDateTime(o.archivedAt || o.paymentValidatedAt || o.createdAt)} · ${o.orderRef || ''}</div>
           </div>
         </div>
