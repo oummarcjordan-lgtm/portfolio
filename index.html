@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMJ Web Développement — IT, Digital & Automatisation IA à Yaoundé</title>
+<meta name="description" content="Développement web, applications mobiles, automatisation IA, design graphique et cybersécurité — par Marc Jordan Oum, OMJ Web Développement, Yaoundé, Cameroun.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="preloader">
+  <div class="loader-track"><div class="loader-icon">💻</div></div>
+  <p class="loader-text">Chargement…</p>
+</div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">OMJ<span class="logo-dot">.</span></a>
+    <div class="nav-links">
+      <a href="services.html">Services</a>
+      <a href="guides.html">Guides</a>
+      <a href="profil.html">À propos</a>
+      <a href="contact.html" class="nav-cta">Me contacter</a>
+    </div>
+    <button class="nav-burger" id="navBurger" aria-label="Ouvrir le menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="nav-scrim" id="navScrim"></div>
+<div class="nav-drawer" id="navDrawer">
+  <a href="services.html">Services</a>
+  <a href="guides.html">Guides</a>
+  <a href="profil.html">À propos</a>
+  <a href="mentions-legales-omj.html#confidentialite">Politique de confidentialité</a>
+  <a href="mentions-legales-omj.html#conditions">Conditions d'utilisation</a>
+  <a href="contact.html" class="nav-drawer-cta">Me contacter</a>
+</div>
+
+<header class="video-hero" id="hero">
+  <video id="heroVideo" class="hero-media" autoplay muted loop playsinline poster="images/hero-fallback.jpg">
+    <source src="videos/logo-hero.mp4" type="video/mp4">
+  </video>
+  <img id="heroFallbackImg" class="hero-media" src="images/hero-fallback.jpg" alt="" style="display:none;">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="eyebrow">IT, Digital & Automatisation IA — Yaoundé, Cameroun</p>
+    <h1 class="hero-title">Un problème numérique ?<br><span class="accent">Une solution qui marche.</span></h1>
+    <p class="hero-sub">Sites web, applications mobiles, automatisation IA, design graphique et cybersécurité — une seule adresse pour digitaliser sérieusement votre activité.</p>
+    <div class="hero-actions">
+      <a href="services.html" class="btn btn-primary">Voir mes services</a>
+      <a href="contact.html" class="btn btn-ghost">Me contacter</a>
+    </div>
+  </div>
+</header>
+
+<section id="flow">
+  <p class="section-eyebrow">Ma méthode</p>
+  <h2 class="section-title">De votre besoin à la solution livrée.</h2>
+  <div class="how-steps">
+    <div class="how-step">
+      <span class="how-step-num">1</span>
+      <h3>Vous m'exposez votre besoin</h3>
+      <p>Un échange rapide pour comprendre votre activité et ce qui vous fait perdre du temps.</p>
+    </div>
+    <div class="how-step">
+      <span class="how-step-num">2</span>
+      <h3>Je conçois la solution</h3>
+      <p>Site, application ou automatisation, pensée pour votre contexte, pas un modèle générique.</p>
+    </div>
+    <div class="how-step">
+      <span class="how-step-num">3</span>
+      <h3>Vous recevez un outil qui marche</h3>
+      <p>Livré, testé, avec un suivi après la mise en ligne.</p>
+    </div>
+  </div>
+</section>
+
+<section id="teaser">
+  <p class="section-eyebrow">Explorer</p>
+  <h2 class="section-title">Deux façons de travailler avec moi.</h2>
+  <div class="card-grid" style="margin-top:48px;">
+    <a href="services.html" class="price-card">
+      <h4>Services</h4>
+      <p class="price-desc">Web, apps, IA &amp; automatisation, design, réseau &amp; cybersécurité, consultation — tarifs détaillés.</p>
+    </a>
+    <a href="guides.html" class="price-card">
+      <h4>Guides</h4>
+      <p class="price-desc">Des guides pratiques pour apprendre l'IA, l'automatisation, le développement et l'entrepreneuriat digital.</p>
+    </a>
+  </div>
+</section>
+
+<section id="trust">
+  <p class="section-eyebrow">Confiance</p>
+  <h2 class="section-title">Ce que mes clients en disent.</h2>
+  <div class="trust-grid">
+    <div class="trust-card">
+      <p>« Un travail sérieux, livré dans les temps, avec un vrai suivi après la mise en ligne. »</p>
+      <cite>— Martial, client</cite>
+    </div>
+    <div class="trust-card">
+      <p>« Exactement ce qu'il fallait pour digitaliser mon activité sans complications techniques. »</p>
+      <cite>— Baverly, cliente</cite>
+    </div>
+  </div>
+</section>
+
+<a href="https://wa.me/237688578748" class="whatsapp-float" target="_blank" rel="noopener" aria-label="Discuter sur WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-7C17.19 3.03 14.68 2 12.04 2zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.24 8.24 0 1 1 6.99 3.86zm4.52-6.17c-.25-.12-1.47-.72-1.7-.81-.23-.08-.4-.12-.56.13-.17.25-.65.81-.79.97-.15.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.48-1.39-1.73-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.42.08-.17.04-.31-.02-.44-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43-.14-.01-.31-.01-.48-.01-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.08 0 1.23.89 2.42 1.02 2.58.12.17 1.75 2.67 4.24 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.28z"/></svg>
+</a>
+
+<footer class="footer">
+  <p>OMJ Web Développement — Yaoundé, Cameroun · 688 578 748 · omjwebdeveloppement@gmail.com · contact@omjweb-dev.site</p>
+  <div class="social-links">
+    <a href="https://www.facebook.com/profile.php?id=61590940675286" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.23.2 2.23.2v2.45h-1.26c-1.24 0-1.62.77-1.62 1.56V12h2.77l-.44 2.89h-2.33v6.99A10 10 0 0 0 22 12z"/></svg>
+      Facebook
+    </a>
+    <a href="https://wa.me/237688578748" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.44 9.9-9.9 0-2.64-1.03-5.13-2.9-7C17.19 3.03 14.68 2 12.04 2zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.24 8.24 0 1 1 6.99 3.86z"/></svg>
+      WhatsApp
+    </a>
+  </div>
+  <p style="margin-top:10px;"><a href="mentions-legales-omj.html" style="opacity:0.75; font-size:12px; text-decoration:underline;">Politique de confidentialité &amp; conditions d'utilisation</a></p>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>
