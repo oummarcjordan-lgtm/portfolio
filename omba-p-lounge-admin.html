@@ -475,7 +475,7 @@
       visitEl.innerHTML = '<div class="panel-empty">Aucune visite ce jour-là.</div>';
     } else {
       visitEl.innerHTML = dayVisits.map(v => {
-        const where = [v.location ? locLabel(v.location) : null, v.table ? ('Table ' + v.table) : null].filter(Boolean).join(' · ');
+        const where = [whereLabel(v), v.table ? ('Table ' + v.table) : null].filter(Boolean).join(' · ');
         return '<div class="panel-row-line"><span class="name">' + (where || 'Visiteur') + ' · ' + (v.device||'—') + ' · ' + etabShortLabel(v) +
           '</span><span class="val">' + fmtDateTime(v.timestamp) + '</span></div>';
       }).join('');
@@ -530,6 +530,10 @@
   }
   function etabShortLabel(x){
     return x.etablissement === 'kstay' ? 'K Stay' : x.etablissement === 'kdreams' ? 'K-Dreams' : "O'Mba'p";
+  }
+  function whereLabel(x){
+    if(x.etablissement === 'kdreams') return x.location ? (KD_LABELS[x.location] || x.location) : null;
+    return x.location ? locLabel(x.location) : null;
   }
 
   // ---------- Présence en direct de la caissière (en ligne / hors ligne) ----------
