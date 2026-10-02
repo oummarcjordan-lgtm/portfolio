@@ -500,6 +500,21 @@
     .hero h1{font-size:56px;}
     .cart-drawer{max-width:480px; left:auto; right:18px; bottom:18px; border-radius:16px;}
   }
+
+  /* ---------- RECHERCHE ---------- */
+  .searchbox{padding:18px 16px 6px;max-width:720px;margin:0 auto;scroll-margin-top:70px;}
+  .sfield{position:relative;}
+  .sfield input{width:100%;padding:13px 42px 13px 16px;border-radius:14px;border:1px solid var(--gold);background:var(--bg-raised);color:var(--cream);font-family:inherit;font-size:16px;-webkit-appearance:none;appearance:none;}
+  .sfield input::placeholder{color:var(--cream-dim);opacity:.8;}
+  .sfield input:focus{outline:none;box-shadow:0 0 0 2px rgba(242,183,5,.35);}
+  .sclear{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:none;background:none;color:var(--gold);font-size:18px;cursor:pointer;display:none;}
+  .sclear.show{display:block;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+  .chip{padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--cream);font-family:inherit;font-size:13px;cursor:pointer;}
+  .chip:active,.chip.on{background:var(--gold);color:var(--bg);border-color:var(--gold);font-weight:600;}
+  .sinfo{color:var(--cream-dim);font-size:12px;margin-top:10px;min-height:16px;}
+  .srch-hide{display:none !important;}
+  .noresult{color:var(--cream-dim);text-align:center;padding:40px 16px;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -516,8 +531,18 @@
   <div id="table-badge" class="table-badge hidden"></div>
 </div>
 
+<div class="searchbox" id="recherche">
+  <div class="sfield">
+    <input id="q" type="search" placeholder="Rechercher (pizza, bière, whisky…)" autocomplete="off" enterkeyhint="search">
+    <button class="sclear" id="qClear" type="button" aria-label="Effacer">&#10005;</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="sinfo" id="sinfo"></div>
+</div>
+
 <div class="catnav-wrap">
   <nav class="catnav" id="catnav">
+    <a href="#recherche" id="goSearch">&#128269; Rechercher</a>
     <a href="#petit-dej">Petits-déj</a>
     <a href="#table">La Table</a>
     <a href="#salades">Salades</a>
@@ -1413,7 +1438,7 @@
   const setActive = () => {
     let idx = 0;
     const y = window.scrollY + 140;
-    sections.forEach((sec, i) => { if (sec && sec.offsetTop <= y) idx = i; });
+    sections.forEach((sec, i) => { if (sec && sec.offsetParent !== null && sec.offsetTop <= y) idx = i; });
     links.forEach((l, i) => l.classList.toggle('active', i === idx));
     const active = links[idx];
     if (active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
@@ -1440,6 +1465,78 @@ window.addEventListener('load', function(){
     v.load();
   }catch(e){}
 });
+</script>
+
+<script>
+/* ---- Recherche dans le menu ---- */
+(function(){
+  const SUGGESTIONS = [
+    {l:'Chicha', q:'chicha'}, {l:'Bière', q:'biere'}, {l:'Pizza', q:'pizza'}, {l:'Burger', q:'burger'},
+    {l:'Petit-déj', q:'petit dejeuner'}, {l:'Poulet', q:'poulet'}, {l:'Poisson', q:'poisson'},
+    {l:'Vin rouge', q:'vin rouge'}, {l:'Vin blanc', q:'vin blanc'}, {l:'Vin rosé', q:'vin rose'},
+    {l:'Champagne', q:'champagne'}, {l:'Whisky', q:'whisky'}, {l:'Cocktail', q:'cocktail'},
+    {l:'Dessert', q:'dessert'}, {l:'Glace', q:'glace'}, {l:'Chambre', q:'chambre'}
+  ];
+  const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’']/g,"'").replace(/\s+/g,' ').trim();
+  const input = document.getElementById('q'), box = document.getElementById('chips'),
+        info = document.getElementById('sinfo'), clr = document.getElementById('qClear');
+
+  /* Index : chaque plat/ligne avec sa section et son sous-titre (ex. « Vins rouges ») */
+  const sections = [], units = [];
+  document.querySelectorAll('main section').forEach(sec=>{
+    const secTitle = (sec.querySelector('.sec-head h2')||{}).textContent || '';
+    const S = {el:sec, units:[], subs:[]}; let cur = null;
+    Array.from(sec.children).forEach(ch=>{
+      if(ch.classList.contains('sub-label')){ cur = {el:ch, units:[]}; S.subs.push(cur); return; }
+      let els = [];
+      if(ch.classList.contains('item') || ch.classList.contains('formule')) els = [ch];
+      else if(ch.tagName==='UL') els = Array.from(ch.querySelectorAll('li'));
+      els.forEach(el=>{
+        const subTxt = cur ? cur.el.textContent : '';
+        const u = {el, hay: norm(secTitle+' '+subTxt+' '+el.textContent)};
+        S.units.push(u); units.push(u); if(cur) cur.units.push(u);
+      });
+    });
+    sections.push(S);
+  });
+
+  const match = (qq, hay) => !qq || qq.split(' ').every(t => hay.indexOf(t) !== -1);
+  const hasResults = qq => units.some(u => match(qq, u.hay));
+
+  const noRes = document.createElement('div'); noRes.className='noresult srch-hide';
+  document.querySelector('main').appendChild(noRes);
+
+  function apply(){
+    const raw = input.value.trim(), qq = norm(raw); let shown = 0;
+    units.forEach(u=>{ const ok = match(qq,u.hay); u.ok = ok; u.el.classList.toggle('srch-hide', !ok); if(ok) shown++; });
+    sections.forEach(S=>{
+      S.subs.forEach(sb=> sb.el.classList.toggle('srch-hide', !sb.units.some(u=>u.ok)));
+      S.el.classList.toggle('srch-hide', !S.units.some(u=>u.ok));
+    });
+    noRes.classList.toggle('srch-hide', shown>0);
+    noRes.textContent = 'Aucun résultat pour « '+raw+' » dans ce menu.';
+    info.textContent = qq ? (shown+' résultat'+(shown>1?'s':'')) : '';
+    clr.classList.toggle('show', !!qq);
+    buildChips();
+  }
+  function buildChips(){
+    const cur = norm(input.value); box.innerHTML = '';
+    SUGGESTIONS.forEach(s=>{
+      if(!hasResults(s.q)) return;                   // pas de suggestion sans résultat
+      const b = document.createElement('button'); b.type='button';
+      b.className = 'chip'+(cur===s.q?' on':''); b.textContent = s.l;
+      b.addEventListener('click', ()=>{
+        input.value = (cur===s.q ? '' : s.q); apply();
+        document.getElementById('recherche').scrollIntoView({behavior:'smooth', block:'start'});
+      });
+      box.appendChild(b);
+    });
+  }
+  input.addEventListener('input', apply);
+  clr.addEventListener('click', ()=>{ input.value=''; apply(); input.focus(); });
+  document.getElementById('goSearch').addEventListener('click', ()=>{ setTimeout(()=>input.focus({preventScroll:true}), 350); });
+  buildChips();
+})();
 </script>
 </body>
 </html>
