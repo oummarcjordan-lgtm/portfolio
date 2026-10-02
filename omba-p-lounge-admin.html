@@ -152,15 +152,34 @@
   .oc-actions{display:flex; gap:10px; margin-top:12px;}
   .oc-btn{flex:1; padding:10px; border-radius:8px; border:1px solid var(--gold); background:none; color:var(--cream); font-weight:600; font-size:13px; cursor:pointer;}
   .hidden{display:none !important;}
+  .avatar{width:34px;height:34px;border-radius:50%;border:2px solid var(--gold);background:var(--bg-card);color:var(--gold);font:700 15px 'Fraunces',serif;cursor:pointer;padding:0;overflow:hidden;vertical-align:middle;margin-right:6px;}
+  .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  #profile-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:150;display:flex;align-items:center;justify-content:center;padding:16px;}
+  .pm-card{background:var(--bg-raised);border:1px solid var(--line);border-radius:14px;padding:18px;width:100%;max-width:360px;max-height:90vh;overflow:auto;}
+  .pm-card h3{margin:0 0 10px;font-size:15px;color:var(--gold);font-family:'Work Sans',sans-serif;}
+  .pm-card input[type=password],.pm-card input[type=tel],.pm-card input[type=text]{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--cream);font-size:14px;margin-bottom:8px;}
+  .pm-btn{background:var(--gold);color:#241a03;border:none;padding:9px 14px;border-radius:20px;font-weight:700;font-size:13px;cursor:pointer;margin-bottom:8px;}
+  .pm-btn.alt{background:none;border:1px solid var(--line);color:var(--cream);}
+  .pm-sec{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;}
+  #pm-status{font-size:12px;min-height:16px;color:var(--cream-dim);}
 </style>
 </head>
 <body>
 
 <div id="login-screen">
   <h1>O'Mba'p, <span>K Stay</span> & K-Dreams</h1>
-  <h2 style="font-size:16px; color:var(--cream-dim); font-family:'Work Sans',sans-serif; font-weight:500;">Tableau de bord — Accès développeur</h2>
-  <input id="login-pin" type="password" inputmode="numeric" maxlength="8" placeholder="Code d'accès">
+  <h2 style="font-size:16px; color:var(--cream-dim); font-family:'Work Sans',sans-serif; font-weight:500;">Tableau de bord — Connexion</h2>
+  <input id="login-user" type="text" autocomplete="username" autocapitalize="none" placeholder="Nom d'utilisateur" style="letter-spacing:0">
+  <input id="login-pass" type="password" autocomplete="current-password" placeholder="Mot de passe" style="letter-spacing:0">
   <button id="login-btn" type="button">Se connecter</button>
+  <button id="google-login-btn" type="button" style="background:none;border:1px solid var(--line);color:var(--cream)">Continuer avec Google</button>
+  <button id="sms-toggle-btn" type="button" style="background:none;border:none;color:var(--cream-dim);text-decoration:underline;font-size:13px;width:auto;padding:4px">Connexion par SMS</button>
+  <div id="sms-box" class="hidden" style="width:100%;max-width:280px;flex-direction:column;gap:8px">
+    <input id="sms-phone" type="tel" placeholder="+237 6XX XX XX XX" style="letter-spacing:0">
+    <button id="sms-send-btn" type="button">Recevoir le code</button>
+    <input id="sms-code" type="text" inputmode="numeric" maxlength="6" placeholder="Code reçu" class="hidden" style="letter-spacing:.2em">
+    <button id="sms-confirm-btn" type="button" class="hidden">Valider le code</button>
+  </div>
   <div id="login-error"></div>
 </div>
 
@@ -183,7 +202,7 @@
   <header>
     <h1 id="app-title">O'Mba'p, <span>K Stay</span> & K-Dreams — Tableau de bord</h1>
     <div style="text-align:right;">
-      <div id="admin-name-val" style="font-size:12px; color:var(--gold); margin-bottom:4px;"></div>
+      <div style="margin-bottom:4px;"><button id="avatar-btn" class="avatar" type="button" title="Mon profil"></button><span id="admin-name-val" style="font-size:12px; color:var(--gold);"></span></div>
       <button id="switch-etab-btn" type="button">🔀 Changer d'établissement</button>
       <button id="logout-btn" type="button">Se déconnecter</button>
     </div>
@@ -283,7 +302,19 @@
 <!-- ======================================================================
      FIREBASE — mêmes clés que les autres pages du projet.
      ====================================================================== -->
+<div id="profile-modal" class="hidden"><div class="pm-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="margin:0">Mon profil</h3><button id="pm-close" class="pm-btn alt" type="button" style="margin:0">Fermer</button></div>
+  <div style="text-align:center"><button id="pm-photo" class="avatar" type="button" style="width:84px;height:84px;font-size:34px;margin:0 0 8px"></button><br>
+  <label class="pm-btn alt" style="display:inline-block">Changer la photo<input id="pm-file" type="file" accept="image/*" hidden></label></div>
+  <div class="pm-sec"><h3>Mot de passe</h3><input id="pm-newpass" type="password" autocomplete="new-password" placeholder="Nouveau mot de passe (6 caractères min.)"><button id="pm-passbtn" class="pm-btn" type="button">Changer</button></div>
+  <div class="pm-sec"><h3>Comptes liés</h3><div id="pm-links" style="font-size:13px;margin-bottom:8px"></div>
+    <button id="pm-google" class="pm-btn alt" type="button">Lier mon compte Gmail</button>
+    <input id="pm-phone" type="tel" placeholder="+237 6XX XX XX XX"><button id="pm-sendcode" class="pm-btn alt" type="button">Lier mon numéro (SMS)</button>
+    <input id="pm-code" type="text" inputmode="numeric" maxlength="6" placeholder="Code reçu" class="hidden"><button id="pm-confirm" class="pm-btn hidden" type="button">Valider le code</button></div>
+  <div id="pm-status"></div>
+</div></div>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script>
   const firebaseConfig = {
@@ -332,32 +363,38 @@
 
 <script>
   // ======================================================================
-  // CODES D'ACCÈS — chacun donne le même accès complet à l'interface.
-  // Ajoute/retire des lignes ici si d'autres personnes doivent avoir accès.
+  // AUTHENTIFICATION — Firebase Auth. Comptes créés dans la console Firebase
+  // + un document admins/{uid} par compte (voir firestore.rules).
   // ======================================================================
-  const ADMIN_CODES = {
-    "9137": "Marc (Développeur)",
-    "4826": "Patron"
-  };
-
-  let currentAdminName = null;
-
-  document.getElementById('login-btn').addEventListener('click', tryLogin);
-  document.getElementById('login-pin').addEventListener('keydown', (e) => { if(e.key==='Enter') tryLogin(); });
+  const auth = firebase.auth();
+  const MAIL_DOM = '@omj-admin.app';
+  let currentAdminName = null, currentUser = null, currentProfile = {};
+  const $ = (id) => document.getElementById(id);
+  const ERR = {'auth/invalid-credential':'Identifiants incorrects.','auth/wrong-password':'Identifiants incorrects.','auth/user-not-found':'Identifiants incorrects.','auth/too-many-requests':'Trop de tentatives, réessaie plus tard.','auth/invalid-phone-number':'Numéro invalide (format +237...).','auth/invalid-verification-code':'Code incorrect.','auth/requires-recent-login':'Déconnecte-toi puis reconnecte-toi, et réessaie.','auth/weak-password':'Mot de passe trop court (6 min.).','auth/credential-already-in-use':'Ce compte est déjà utilisé ailleurs.','auth/provider-already-linked':'Déjà lié.','auth/popup-closed-by-user':'Fenêtre fermée.'};
+  const msg = (e) => ERR[e.code] || ('Erreur : ' + (e.code || e.message));
+  const loginErr = (m) => { $('login-error').textContent = m || ''; };
 
   function tryLogin(){
-    const pin = document.getElementById('login-pin').value.trim();
-    if(!ADMIN_CODES[pin]){
-      document.getElementById('login-error').textContent = 'Code incorrect.';
-      return;
-    }
-    currentAdminName = ADMIN_CODES[pin];
-    sessionStorage.setItem('omjAdminOk', pin);
-    showEtabSelect();
+    const u = $('login-user').value.trim().toLowerCase().replace(/\s+/g,''), p = $('login-pass').value;
+    if(!u || !p) return loginErr('Remplis les deux champs.');
+    loginErr(''); auth.signInWithEmailAndPassword(u + MAIL_DOM, p).catch(e => loginErr(msg(e)));
   }
+  $('login-btn').addEventListener('click', tryLogin);
+  $('login-pass').addEventListener('keydown', (e) => { if(e.key==='Enter') tryLogin(); });
+  $('google-login-btn').addEventListener('click', () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => loginErr(msg(e))));
+  $('sms-toggle-btn').addEventListener('click', () => { const b=$('sms-box'); b.classList.toggle('hidden'); b.style.display = b.classList.contains('hidden') ? '' : 'flex'; });
+  let smsConf = null, smsVerifier = null;
+  function sendSms(phoneId, sendBtnId, codeId, confirmId, linking, done){
+    const num = $(phoneId).value.replace(/\s+/g,'');
+    if(!smsVerifier) smsVerifier = new firebase.auth.RecaptchaVerifier(sendBtnId, {size:'invisible'});
+    const p = linking ? currentUser.linkWithPhoneNumber(num, smsVerifier) : auth.signInWithPhoneNumber(num, smsVerifier);
+    p.then(r => { smsConf = r; $(codeId).classList.remove('hidden'); $(confirmId).classList.remove('hidden'); done(''); })
+     .catch(e => { done(msg(e)); try{ smsVerifier.clear(); }catch(_){} smsVerifier = null; });
+  }
+  $('sms-send-btn').addEventListener('click', () => sendSms('sms-phone','sms-send-btn','sms-code','sms-confirm-btn',false,loginErr));
+  $('sms-confirm-btn').addEventListener('click', () => smsConf && smsConf.confirm($('sms-code').value.trim()).catch(e => loginErr(msg(e))));
   document.getElementById('logout-btn').addEventListener('click', () => {
-    sessionStorage.removeItem('omjAdminOk');
-    location.reload();
+    auth.signOut().then(() => location.reload());
   });
   document.getElementById('switch-etab-btn').addEventListener('click', () => {
     document.getElementById('app').classList.add('hidden');
@@ -368,11 +405,57 @@
   });
   document.getElementById('etab-both-link').addEventListener('click', () => chooseEtab(''));
 
-  const savedPin = sessionStorage.getItem('omjAdminOk');
-  if(savedPin && ADMIN_CODES[savedPin]){
-    currentAdminName = ADMIN_CODES[savedPin];
+  // ---------- Session : seuls les comptes ayant un document admins/{uid} entrent ----------
+  let unsubProfile = null;
+  auth.onAuthStateChanged(async (user) => {
+    if(!user) return;
+    let snap = null;
+    try{ snap = await db.collection('admins').doc(user.uid).get(); }catch(e){ console.warn(e); }
+    if(!snap || !snap.exists){
+      if(user.metadata.creationTime === user.metadata.lastSignInTime) await user.delete().catch(()=>{});
+      await auth.signOut(); loginErr("Ce compte n'a pas accès au tableau de bord."); return;
+    }
+    currentUser = user; currentProfile = snap.data() || {};
+    const em = user.email || '';
+    const uname = em.endsWith(MAIL_DOM) ? em.split('@')[0] : (currentProfile.name || user.displayName || 'Admin');
+    currentAdminName = currentProfile.role === 'dev' ? 'Marc (Développeur)' : uname;
+    if(unsubProfile) unsubProfile();
+    unsubProfile = db.collection('admins').doc(user.uid).onSnapshot(s => { currentProfile = s.data() || currentProfile; updateAvatar(); });
+    updateAvatar(); showEtabSelect();
+  });
+
+  function updateAvatar(){
+    const photo = currentProfile.photo, ini = (currentAdminName || '?').charAt(0).toUpperCase();
+    ['avatar-btn','pm-photo'].forEach(id => { $(id).innerHTML = photo ? '<img alt="" src="'+photo+'">' : ini; });
+    $('admin-name-val').textContent = currentAdminName || '';
   }
-  if(currentAdminName){ showEtabSelect(); }
+
+  // ---------- Profil : photo, mot de passe, comptes liés ----------
+  const pmStatus = (m) => { $('pm-status').textContent = m || ''; };
+  function renderLinks(){
+    const ids = (currentUser.providerData || []).map(p => p.providerId);
+    $('pm-links').innerHTML = 'Gmail : ' + (ids.includes('google.com') ? '✅ lié' : 'non lié') + '<br>Téléphone : ' + (ids.includes('phone') ? '✅ lié' : 'non lié');
+  }
+  $('avatar-btn').addEventListener('click', () => { renderLinks(); pmStatus(''); $('profile-modal').classList.remove('hidden'); });
+  $('pm-close').addEventListener('click', () => $('profile-modal').classList.add('hidden'));
+  $('pm-file').addEventListener('change', (e) => {
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = () => { const im = new Image(); im.onload = () => {
+      const c = document.createElement('canvas'); c.width = c.height = 200;
+      const m = Math.min(im.width, im.height);
+      c.getContext('2d').drawImage(im, (im.width-m)/2, (im.height-m)/2, m, m, 0, 0, 200, 200);
+      db.collection('admins').doc(currentUser.uid).set({photo: c.toDataURL('image/jpeg', 0.7)}, {merge:true})
+        .then(() => pmStatus('Photo mise à jour ✅')).catch(err => pmStatus(msg(err)));
+    }; im.src = r.result; };
+    r.readAsDataURL(f);
+  });
+  $('pm-passbtn').addEventListener('click', () => {
+    currentUser.updatePassword($('pm-newpass').value).then(() => { $('pm-newpass').value=''; pmStatus('Mot de passe changé ✅'); }).catch(e => pmStatus(msg(e)));
+  });
+  $('pm-google').addEventListener('click', () => currentUser.linkWithPopup(new firebase.auth.GoogleAuthProvider()).then(() => { renderLinks(); pmStatus('Gmail lié ✅'); }).catch(e => pmStatus(msg(e))));
+  $('pm-sendcode').addEventListener('click', () => sendSms('pm-phone','pm-sendcode','pm-code','pm-confirm',true, m => pmStatus(m || 'Code envoyé par SMS.')));
+  $('pm-confirm').addEventListener('click', () => smsConf && smsConf.confirm($('pm-code').value.trim()).then(() => { renderLinks(); pmStatus('Numéro lié ✅'); }).catch(e => pmStatus(msg(e))));
 
   function showEtabSelect(){
     document.getElementById('login-screen').classList.add('hidden');
