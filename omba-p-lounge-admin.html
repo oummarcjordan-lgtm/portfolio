@@ -176,6 +176,18 @@
   #drawer .dr-item:active{background:var(--bg-card);}
   #drawer #logout-btn{color:#e8836b;margin-top:auto;}
 </style>
+<style>
+#caisses-panel details{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:var(--bg-raised);}
+#caisses-panel summary{padding:12px 14px;cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:8px;}
+#caisses-panel summary::-webkit-details-marker{display:none;}
+.cs-count{font-weight:400;font-size:12px;color:var(--cream-dim);}
+.cs-all{display:flex;gap:8px;padding:0 14px 10px;}
+.cs-all button,.cs-sw{border:1px solid var(--line);background:var(--bg-card);color:var(--cream);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;}
+.cs-row{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-top:1px solid var(--line);}
+.cs-sw.on{background:var(--green);border-color:var(--green);color:#fff;}
+.cs-sw.off{background:var(--ember);border-color:var(--ember);color:#fff;}
+#caisses-msg{width:100%;box-sizing:border-box;margin-top:6px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg-card);color:var(--cream);font-size:13px;}
+</style>
 </head>
 <body>
 
@@ -296,6 +308,15 @@
       <option value="validee">Validées seulement</option>
       <option value="annulee">Annulées seulement</option>
     </select>
+  </div>
+
+  <div class="panel-row" id="caisses-panel">
+    <div class="panel" style="grid-column: 1 / -1;">
+      <h3>🔒 Caisses <small style="font-weight:400;color:var(--cream-dim);font-size:11px;">— activer / désactiver à distance</small></h3>
+      <div id="caisses-box"><div class="panel-empty">Chargement…</div></div>
+      <label for="caisses-msg" style="font-size:12px;color:var(--cream-dim);display:block;margin-top:10px;">Message affiché sur une caisse fermée (optionnel)</label>
+      <input id="caisses-msg" type="text" placeholder="Ex. : Caisse fermée, réouverture demain à 8h">
+    </div>
   </div>
 
   <div class="panel-row" id="presence-panel">
@@ -501,6 +522,7 @@
     logConnection(currentAdminName);
     subscribeArchive();
     subscribePresence();
+    subscribeCaisses();
     if(currentAdminName === 'Marc (Développeur)'){
       document.getElementById('connections-panel').classList.remove('hidden');
       subscribeConnectionsLog();
@@ -1032,5 +1054,49 @@
   }
 </script>
 
+<script>
+/* ===== SECTION CAISSES — écrit dans Firestore system/caisses {etat:{id:bool}, message} ===== */
+const CAISSES = {
+  ombap:   { label: "O'Mba'p Lounge", items: [["ombap", "Caisse O'Mba'p"]] },
+  kstay:   { label: "K Stay",         items: [["kstay", "Caisse K Stay"]] },
+  kdreams: { label: "K-Dreams",       items: [["kd_restaurant","Restaurant"],["kd_rooftop","Rooftop"],["kd_salle_de_jeu","Salle de jeu"],["kd_espace_cigare","Espace cigare"],["kd_boite_de_nuit","Boîte de nuit"],["kd_hebergement","Hébergement"]] }
+};
+let unsubCaisses = null, caissesState = { etat: {}, message: '' };
+const caissesRef = () => db.collection('system').doc('caisses');
+function setCaisses(ids, val){
+  const etat = {}; ids.forEach(i => { etat[i] = val; });
+  return caissesRef().set({ etat: etat }, { merge: true }).catch(e => alert('Action refusée : ' + e.message));
+}
+function renderCaisses(){
+  const box = document.getElementById('caisses-box');
+  const opened = Array.from(box.querySelectorAll('details[open]')).map(d => d.dataset.k);
+  box.innerHTML = Object.entries(CAISSES).map(([k, g]) => {
+    const ids = g.items.map(x => x[0]);
+    const nOn = ids.filter(i => caissesState.etat[i] !== false).length;
+    return '<details data-k="' + k + '"' + (opened.includes(k) ? ' open' : '') + '><summary><span>' + g.label + '</span><span class="cs-count">' + nOn + '/' + ids.length + ' ouverte(s)</span></summary>' +
+      '<div class="cs-all"><button type="button" data-ids="' + ids.join(',') + '" data-val="1">Tout activer</button><button type="button" data-ids="' + ids.join(',') + '" data-val="0" data-confirm="1">Tout désactiver</button></div>' +
+      g.items.map(([id, l]) => {
+        const on = caissesState.etat[id] !== false;
+        return '<div class="cs-row"><span>' + l + '</span><button type="button" class="cs-sw ' + (on ? 'on' : 'off') + '" data-ids="' + id + '" data-val="' + (on ? 0 : 1) + '">' + (on ? 'Activée' : 'Désactivée') + '</button></div>';
+      }).join('') + '</details>';
+  }).join('');
+}
+function subscribeCaisses(){
+  if(unsubCaisses) return;
+  const box = document.getElementById('caisses-box'), msg = document.getElementById('caisses-msg');
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-ids]'); if(!b) return;
+    if(b.dataset.confirm && !confirm('Désactiver toutes les caisses de cet établissement ?')) return;
+    setCaisses(b.dataset.ids.split(','), b.dataset.val === '1');
+  });
+  msg.addEventListener('change', () => { caissesRef().set({ message: msg.value.trim() }, { merge: true }).catch(e => alert('Action refusée : ' + e.message)); });
+  unsubCaisses = caissesRef().onSnapshot((s) => {
+    const d = s.exists ? s.data() : {};
+    caissesState = { etat: d.etat || {}, message: d.message || '' };
+    if(document.activeElement !== msg) msg.value = caissesState.message;
+    renderCaisses();
+  }, (err) => { box.innerHTML = '<div class="panel-empty">Lecture impossible : ' + err.message + '</div>'; });
+}
+</script>
 </body>
 </html>
