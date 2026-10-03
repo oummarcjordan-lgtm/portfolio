@@ -203,6 +203,72 @@
 .cs-sub{font-size:11px;color:var(--cream-dim);margin-top:2px;}
 #caisses-panel details details{margin:0 10px 8px;}
 </style>
+
+<script>
+/* ===== Traduction FR / EN du tableau de bord (interface seulement) ===== */
+(function(){
+  var KEY='omj_admin_lang';
+  var EXACT={"& K-Dreams — Tableau de bord": "& K-Dreams — Dashboard", "Ajouter la caissière": "Add cashier", "Annulées seulement": "Cancelled only", "Aucune commande pour cette date.": "No orders for this date.", "Aujourd'hui": "Today", "Changer": "Change", "Changer la photo": "Change photo", "Chargement…": "Loading…", "Choisissez le tableau de bord à consulter": "Choose the dashboard to view", "Commandes annulées": "Cancelled orders", "Commandes validées": "Validated orders", "Comptes liés": "Linked accounts", "Continuer avec Google": "Continue with Google", "Espèces": "Cash", "Fermer": "Close", "Lier mon compte Gmail": "Link my Gmail account", "Menus les plus commandés": "Most ordered items", "Message affiché sur une caisse fermée (optionnel)": "Message shown on a closed register (optional)", "Meublés · Lounge · Restaurant": "Furnished rooms · Lounge · Restaurant", "Mon profil": "My profile", "Mot de passe": "Password", "OMJ — Tableau de bord": "OMJ — Dashboard", "Par lieu": "By location", "Par mode de paiement": "By payment method", "Quel établissement ?": "Which establishment?", "Rapport du :": "Report for:", "Restaurant · Rooftop · Jeux · Cigare · Boîte de nuit · Hébergement": "Restaurant · Rooftop · Games · Cigar · Nightclub · Lodging", "Se connecter": "Sign in", "Tableau de bord — Connexion": "Dashboard — Sign in", "Tables les plus commandées": "Most ordered tables", "Total commandes du jour": "Total orders of the day", "Total encaissé ce jour (FCFA)": "Total collected this day (FCFA)", "Tous les paiements": "All payments", "Tous les établissements": "All establishments", "Toutes les caisses (3 établissements)": "All registers (3 establishments)", "Validées + annulées": "Validated + cancelled", "Validées seulement": "Validated only", "Voir tous les établissements ensemble": "View all establishments together", "— activer / désactiver à distance": "— enable / disable remotely", "— code personnel pour chaque caissière": "— personal code for each cashier", "— jour et établissement sélectionnés ci-dessus": "— day and establishment selected above", "— validations et annulations du jour sélectionné": "— validations and cancellations of the selected day", "⎋ Se déconnecter": "⎋ Sign out", "👀 Visites du menu (visiteurs)": "👀 Menu visits (visitors)", "👤 Caissières": "👤 Cashiers", "👤 Mon profil et photo": "👤 My profile and photo", "📥 Télécharger le rapport du jour": "📥 Download the daily report", "🔀 Changer d'établissement": "🔀 Switch establishment", "🔑 Connexions comptes (caisse + admin)": "🔑 Account sign-ins (register + admin)", "🔑 Mot de passe": "🔑 Password", "🔒 Caisses": "🔒 Registers", "🔗 Compte Gmail lié": "🔗 Linked Gmail account", "🕵️ Contrôle": "🕵️ Audit", "🟢 Présence caissière (en direct)": "🟢 Cashier presence (live)", "Code personnel (6 chiffres conseillés)": "Personal code (6 digits recommended)", "Ex. : Caisse fermée, réouverture demain à 8h": "E.g.: Register closed, reopening tomorrow at 8am", "Nom d'utilisateur": "Username", "Nom et prénom de la caissière": "Cashier's full name", "Nouveau mot de passe (6 caractères min.)": "New password (6 characters min.)", "Tous les lieux": "All locations", "Tous les espaces": "All areas", "Site web": "Website", "Terminal (carte)": "Terminal (card)", "Terminal": "Terminal", "Salle de jeu": "Game room", "Espace cigare": "Cigar lounge", "Boîte de nuit": "Nightclub", "à confirmer": "to be confirmed", "Non précisé": "Not specified", "Détail": "Details", "✅ Validée": "✅ Validated", "✕ Annulée": "✕ Cancelled", "Toutes les caisses": "All registers", "K-Dreams — toutes les caisses": "K-Dreams — all registers", "K-Dreams — Toutes les caisses": "K-Dreams — All registers", "🔴 Désactivée": "🔴 Disabled", "🔴 désactivée": "🔴 disabled", "🟢 active": "🟢 active", "🕒 Fermée (hors horaires)": "🕒 Closed (outside hours)", "Activer": "Enable", "Désactiver": "Disable", "Activée": "Enabled", "Désactivée": "Disabled", "Tout activer": "Enable all", "Tout désactiver": "Disable all", "Enregistrer les horaires": "Save hours", "Enregistré ✅": "Saved ✅", "Horaires automatiques": "Automatic hours", "Horaires automatiques (heure du Cameroun)": "Automatic hours (Cameroon time)", "Horaires de cette caisse": "Hours of this register", "Ouvre à": "Opens at", "Ferme à": "Closes at", "Développeur": "Developer", "Propriétaire": "Owner", "inconnu": "unknown", "Jamais connectée": "Never signed in", "Aucune donnée pour ce jour.": "No data for this day.", "Aucune donnée.": "No data.", "Aucune caissière enregistrée.": "No cashier registered.", "Aucune caissière enregistrée pour le moment.": "No cashier registered yet.", "Aucune connexion ce jour-là.": "No sign-ins that day.", "Aucune visite ce jour-là.": "No visits that day.", "Aucune validation ni annulation enregistrée ce jour-là.": "No validation or cancellation recorded that day.", "Supprimer": "Delete", "Marc (Développeur)": "Marc (Developer)", "📥 Télécharger la facture PDF": "📥 Download the PDF invoice", "Identifiants incorrects.": "Incorrect credentials.", "Trop de tentatives, réessaie plus tard.": "Too many attempts, try again later.", "Numéro invalide (format +237...).": "Invalid number (format +237...).", "Code incorrect.": "Incorrect code.", "Déconnecte-toi puis reconnecte-toi, et réessaie.": "Sign out, sign back in, and try again.", "Mot de passe trop court (6 min.).": "Password too short (6 min.).", "Ce compte est déjà utilisé ailleurs.": "This account is already used elsewhere.", "Déjà lié.": "Already linked.", "Fenêtre fermée.": "Window closed.", "Remplis les deux champs.": "Fill in both fields.", "Ce compte n'a pas accès au tableau de bord.": "This account has no access to the dashboard.", "Photo mise à jour ✅": "Photo updated ✅", "Gmail lié ✅": "Gmail linked ✅", "✅ lié": "✅ linked", "non lié": "not linked", "Désactiver toutes les caisses de cet établissement ?": "Disable all registers of this establishment?", "Choisis une heure d'ouverture et une heure de fermeture différentes.": "Choose different opening and closing times.", "Indique un nom et un code de 4 à 8 chiffres.": "Enter a name and a code of 4 to 8 digits.", "Ce code est déjà utilisé : choisis-en un autre.": "This code is already in use: choose another one.", "Erreur 402 — Service suspendu": "Error 402 — Service suspended", "⚠️ nom non vérifié": "⚠️ name not verified"};
+  var FRAG=[[" commande(s) K-Dreams validée(s) contenaient des articles sans prix : le total réel est supérieur au total affiché.", " validated K-Dreams order(s) contained items without a price: the real total is higher than the total shown."], ["Horaires pour toutes les caisses de ", "Hours for all registers of "], ["Verrou d'accès : lecture impossible", "Access lock: read failed"], [" annulation(s) sans motif.", " cancellation(s) without a reason."], ["Lecture impossible : ", "Read failed: "], ["Dernière activité : ", "Last activity: "], [" — Tableau de bord", " — Dashboard"], ["Connectée depuis ", "Signed in since "], ["⚠️ Annulation de ", "⚠️ Cancellation of "], ["Action refusée : ", "Action denied: "], ["Déconnectée à ", "Signed out at "], [" validée(s) · ", " validated · "], [" annulée(s) · ", " cancelled · "], ["✓ Encaissé — ", "✓ Paid — "], [" opérations (", " operations ("], ["En ligne — ", "Online — "], ["Horaires — ", "Hours — "], ["Désactiver ", "Disable "], ["Supprimer ", "Delete "], [" — Caisse", " — Register"], ["Table n° ", "Table no. "], ["Erreur : ", "Error: "], ["Motif : ", "Reason: "], [" cmd · ", " orders · "]];
+  var lang='fr';
+  try{ lang = localStorage.getItem(KEY) || ((navigator.language||'fr').toLowerCase().indexOf('en')===0 ? 'en' : 'fr'); }catch(e){}
+  window.OMJ_LANG = lang;
+  document.documentElement.lang = lang;
+  function tr(str){
+    if(lang!=='en' || !str) return str;
+    var t=str.trim(); if(!t) return str;
+    if(EXACT.hasOwnProperty(t)) return str.replace(t, EXACT[t]);
+    var out=str, ch=false;
+    for(var i=0;i<FRAG.length;i++){
+      if(out.indexOf(FRAG[i][0])!==-1){ out=out.split(FRAG[i][0]).join(FRAG[i][1]); ch=true; }
+    }
+    return ch?out:str;
+  }
+  window.OMJ_tr = tr;
+  if(lang==='en'){
+    var _a=window.alert, _c=window.confirm, _p=window.prompt;
+    window.alert=function(m){ return _a.call(window, tr(String(m))); };
+    window.confirm=function(m){ return _c.call(window, tr(String(m))); };
+    window.prompt=function(m,d){ return _p.call(window, tr(String(m)), d); };
+  }
+  var ATTRS=['placeholder','title','aria-label'];
+  function doNode(n){
+    if(n.nodeType===3){
+      var p=n.parentNode; if(!p) return;
+      var tag=p.nodeName; if(tag==='SCRIPT'||tag==='STYLE'||tag==='TEXTAREA') return;
+      var v=tr(n.nodeValue); if(v!==n.nodeValue) n.nodeValue=v;
+    } else if(n.nodeType===1){
+      if(n.nodeName==='SCRIPT'||n.nodeName==='STYLE') return;
+      ATTRS.forEach(function(a){ if(n.hasAttribute(a)){ var o=n.getAttribute(a), v=tr(o); if(v!==o) n.setAttribute(a,v); } });
+      for(var c=n.firstChild;c;c=c.nextSibling) doNode(c);
+    }
+  }
+  function updateButtons(){
+    var label = lang==='en' ? '\ud83c\udf10 Fran\u00e7ais' : '\ud83c\udf10 English';
+    ['lang-btn','lang-btn-login'].forEach(function(id){ var b=document.getElementById(id); if(b) b.textContent=label; });
+  }
+  function toggle(){
+    try{ localStorage.setItem(KEY, lang==='en' ? 'fr' : 'en'); }catch(e){}
+    location.reload();
+  }
+  document.addEventListener('click', function(e){
+    var t=e.target; while(t && t!==document){ if(t.id==='lang-btn'||t.id==='lang-btn-login'){ toggle(); return; } t=t.parentNode; }
+  });
+  function start(){
+    updateButtons();
+    if(lang!=='en') return;
+    doNode(document.documentElement);
+    new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        if(m.type==='characterData') doNode(m.target);
+        else if(m.type==='attributes') doNode(m.target);
+        else m.addedNodes.forEach(doNode);
+      });
+    }).observe(document.documentElement,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:ATTRS});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
 </head>
 <body>
 
@@ -214,6 +280,7 @@
   <button id="login-btn" type="button">Se connecter</button>
   <button id="google-login-btn" type="button" style="background:none;border:1px solid var(--line);color:var(--cream)">Continuer avec Google</button>
   <div id="login-error"></div>
+  <button id="lang-btn-login" type="button" style="background:none;border:none;color:var(--cream-dim);font-size:13px;margin-top:6px;">🌐 English</button>
 </div>
 
 <div id="etab-select-screen" class="hidden">
@@ -247,6 +314,7 @@
     <button class="dr-item" type="button" data-go="pm-newpass">🔑 Mot de passe</button>
     <button class="dr-item" type="button" data-go="pm-google">🔗 Compte Gmail lié</button>
     <button class="dr-item" id="switch-etab-btn" type="button">🔀 Changer d'établissement</button>
+    <button class="dr-item" id="lang-btn" type="button">🌐 English</button>
     <button class="dr-item" id="logout-btn" type="button">⎋ Se déconnecter</button>
   </aside>
 
