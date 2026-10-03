@@ -346,7 +346,7 @@
       <h3>👤 Caissières <small style="font-weight:400;color:var(--cream-dim);font-size:11px;">— code personnel pour chaque caissière</small></h3>
       <input id="cq-name" class="ct-in" type="text" placeholder="Nom et prénom de la caissière">
       <input id="cq-code" class="ct-in" type="text" inputmode="numeric" maxlength="8" placeholder="Code personnel (6 chiffres conseillés)">
-      <select id="cq-etab" class="ct-in"><option value="ombap">O'Mba'p Lounge</option><option value="kstay">K Stay</option><option value="kdreams">K-Dreams</option><option value="all">Tous les établissements</option></select>
+      <select id="cq-etab" class="ct-in"><option value="ombap">O'Mba'p Lounge — Caisse</option><option value="kstay">K Stay — Caisse</option><optgroup label="K-Dreams"><option value="etab:kdreams">K-Dreams — Toutes les caisses</option><option value="kd_restaurant">K-Dreams — Restaurant</option><option value="kd_rooftop">K-Dreams — Rooftop</option><option value="kd_salle_de_jeu">K-Dreams — Salle de jeu</option><option value="kd_espace_cigare">K-Dreams — Espace cigare</option><option value="kd_boite_de_nuit">K-Dreams — Boîte de nuit</option><option value="kd_hebergement">K-Dreams — Hébergement</option></optgroup><option value="all">Toutes les caisses (3 établissements)</option></select>
       <button id="cq-add" class="ct-btn" type="button">Ajouter la caissière</button>
       <div id="cq-list" style="margin-top:10px;"></div>
     </div>
@@ -1219,11 +1219,16 @@ function subscribeControle(){
     auditDocs = s.docs.map(d => d.data()); renderControle();
   }, (e) => { document.getElementById('controle-box').innerHTML = '<div class="panel-empty">Lecture impossible : ' + escH(e.message) + '</div>'; });
 }
+function cqLabel(c){
+  const v = c.caisse || (c.etab === 'kdreams' ? 'etab:kdreams' : c.etab);
+  if(v === 'all') return 'Toutes les caisses';
+  if(v === 'etab:kdreams') return 'K-Dreams — toutes les caisses';
+  return CAISSE_LABELS[v] || v;
+}
 function renderCaissieres(){
   const el = document.getElementById('cq-list');
   if(!cqDocs.length){ el.innerHTML = '<div class="panel-empty">Aucune caissière enregistrée.</div>'; return; }
-  const E = { ombap: "O'Mba'p", kstay: 'K Stay', kdreams: 'K-Dreams', all: 'Tous' };
-  el.innerHTML = cqDocs.map(c => '<div class="ct-row"><b>' + escH(c.name) + '</b> · ' + (E[c.etab] || c.etab) + ' · ' + (c.actif ? '🟢 active' : '🔴 désactivée') + '<br>' +
+  el.innerHTML = cqDocs.map(c => '<div class="ct-row"><b>' + escH(c.name) + '</b> · ' + cqLabel(c) + ' · ' + (c.actif ? '🟢 active' : '🔴 désactivée') + '<br>' +
     '<button class="ct-btn alt" type="button" data-cq="' + c.id + '" data-act="toggle">' + (c.actif ? 'Désactiver' : 'Activer') + '</button>' +
     '<button class="ct-btn alt" type="button" data-cq="' + c.id + '" data-act="del">Supprimer</button></div>').join('');
 }
@@ -1234,7 +1239,7 @@ function subscribeCaissieres(){
     if(name.length < 2 || !/^[0-9]{4,8}$/.test(code)) return alert('Indique un nom et un code de 4 à 8 chiffres.');
     const hash = await omjSha(code);
     if(cqDocs.some(c => c.hash === hash)) return alert('Ce code est déjà utilisé : choisis-en un autre.');
-    db.collection('caissieres').add({ name: name, hash: hash, etab: etab, actif: true, createdMs: Date.now() })
+    db.collection('caissieres').add({ name: name, hash: hash, caisse: etab, etab: (etab === 'all' ? 'all' : (etab.indexOf('kd_') === 0 || etab === 'etab:kdreams') ? 'kdreams' : etab), actif: true, createdMs: Date.now() })
       .then(() => { document.getElementById('cq-name').value = ''; document.getElementById('cq-code').value = ''; })
       .catch(e => alert('Action refusée : ' + e.message));
   });

@@ -236,6 +236,15 @@
   .my-order-status{font-size:13px; color:var(--cream-dim); margin:6px 0 14px;}
   .my-order-cancel-btn{background:transparent; border:1px solid var(--ember); color:var(--ember);}
 
+  .my-order-items{max-height:60vh;}
+  .mo-card{border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:10px;}
+  .mo-head{display:flex; justify-content:space-between; gap:8px; font-weight:700; font-size:14px;}
+  .mo-st{font-size:13px; margin:6px 0; color:var(--cream-dim);}
+  .mo-st.bad{color:var(--ember); font-weight:600;}
+  .mo-st.ok{color:#3ba55c; font-weight:600;}
+  .mo-btn{background:transparent; border:1px solid var(--ember); color:var(--ember); border-radius:8px; padding:7px 12px; font-size:13px; cursor:pointer; margin-top:4px;}
+  .mo-btn.alt{border-color:var(--line); color:var(--cream-dim);}
+
   /* ---------- SECTIONS ---------- */
   main{max-width:760px; margin:0 auto; padding:8px 18px 100px;}
   section{padding:38px 0; border-bottom:1px solid var(--line);}
@@ -1016,17 +1025,14 @@
   </div>
 </div>
 
-<button id="my-order-float" class="my-order-float hidden" type="button" onclick="showMyOrderPanel()">🧾 Voir ma commande</button>
+<button id="my-order-float" class="my-order-float hidden" type="button" onclick="showMyOrderPanel()">🧾 Mes commandes</button>
 
 <div id="my-order-overlay" class="modal-overlay hidden">
   <div class="modal-box">
-    <div class="modal-title">Ma commande</div>
+    <div class="modal-title">Mes commandes</div>
     <div id="my-order-items" class="my-order-items"></div>
-    <div class="my-order-total-row"><span>Total</span><span id="my-order-total">0 FCFA</span></div>
-    <div id="my-order-status" class="my-order-status"></div>
     <div class="modal-actions">
       <button id="my-order-close-btn" class="modal-btn modal-cancel" type="button">Fermer</button>
-      <button id="my-order-cancel-btn" class="modal-btn my-order-cancel-btn" type="button">Annuler la commande</button>
     </div>
   </div>
 </div>
@@ -1220,10 +1226,10 @@
   let orderSent = false;
   let orderInFlight = false;
   async function sendOrderToTablets(statusNote, paymentMethod, location){
-    if(orderSent || orderInFlight) return; // évite un double-envoi pendant l'écriture ou après succès
+    if(orderInFlight || !Object.keys(cart).length) return; // évite un double-envoi pendant l'écriture (plusieurs commandes successives autorisées)
     orderInFlight = true;
     const name = await getCustomerName();
-    if(!orderCounter) orderCounter = 'CMD-' + Date.now().toString().slice(-6);
+    orderCounter = 'CMD-' + Date.now().toString().slice(-6); // une référence par commande
 
     const items = Object.entries(cart).map(([itemName, d]) => ({
       name: itemName,
@@ -1249,9 +1255,7 @@
         claimedBy: null,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      orderSent = true;
-      lastOrderId = docRef.id;
-      lastOrderSummary = { items, total, table: tableNumber || null };
+      addMyOrder({ id: docRef.id, ref: orderCounter, items: items, total: total, table: tableNumber || null, createdMs: Date.now(), state: 'attente', motif: '' });
 
       // Panier vidé, retour automatique au menu principal
       Object.keys(cart).forEach(k => delete cart[k]);
@@ -1270,48 +1274,76 @@
     }
   }
 
-  // ---------- Panneau "Voir ma commande" + annulation côté client ----------
-  let lastOrderId = null;
-  let lastOrderSummary = null;
-
-  function showMyOrderPanel(){
-    if(!lastOrderId || !lastOrderSummary) return;
-    const itemsEl = document.getElementById('my-order-items');
-    itemsEl.innerHTML = lastOrderSummary.items.map(it =>
-      `<div class="my-order-item-row"><span>${it.qty}× ${it.name}</span><span>${(it.price*it.qty).toLocaleString('fr-FR')} FCFA</span></div>`
-    ).join('');
-    document.getElementById('my-order-total').textContent = lastOrderSummary.total.toLocaleString('fr-FR') + ' FCFA';
-    document.getElementById('my-order-status').textContent = 'Commande envoyée en salle — en attente de prise en charge.';
-    document.getElementById('my-order-overlay').classList.remove('hidden');
+  // ---------- Mes commandes : plusieurs commandes en même temps, suivi en direct ----------
+  const MY_KEY = 'omb_my_orders';
+  const myUnsubs = {};
+  let myOrders = [];
+  function saveMy(){ try{ localStorage.setItem(MY_KEY, JSON.stringify(myOrders)); }catch(e){} }
+  function esc2(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  const MO_TXT = {
+    attente: ['⏳ En attente — transmise en salle', ''],
+    validee: ['✅ Servie et payée', 'ok'],
+    annulee: ['❌ Annulée par la caisse', 'bad'],
+    annulee_client: ['🚫 Annulée par vous', 'bad']
+  };
+  function renderMyOrders(){
+    const list = document.getElementById('my-order-items');
+    const fl = document.getElementById('my-order-float');
+    const pending = myOrders.filter(o => o.state === 'attente').length;
+    fl.textContent = '🧾 Mes commandes' + (pending ? ' (' + pending + ')' : '');
+    fl.classList.toggle('hidden', myOrders.length === 0);
+    list.innerHTML = myOrders.length ? myOrders.slice().sort((a, b) => b.createdMs - a.createdMs).map(o => {
+      const st = MO_TXT[o.state] || MO_TXT.attente;
+      return '<div class="mo-card"><div class="mo-head"><span>' + esc2(o.ref) + (o.table ? ' · Table ' + esc2(o.table) : '') + '</span><span>' + (o.total || 0).toLocaleString('fr-FR') + ' FCFA</span></div>' +
+        (o.items || []).map(it => '<div class="my-order-item-row"><span>' + it.qty + '× ' + esc2(it.name) + '</span><span>' + (it.price * it.qty).toLocaleString('fr-FR') + ' FCFA</span></div>').join('') +
+        '<div class="mo-st ' + st[1] + '">' + st[0] + (o.state === 'annulee' && o.motif ? '<br>Motif : ' + esc2(o.motif) : '') + '</div>' +
+        (o.state === 'attente' ? '<button class="mo-btn" type="button" data-cancel="' + o.id + '">Annuler cette commande</button>' : '<button class="mo-btn alt" type="button" data-remove="' + o.id + '">Retirer de la liste</button>') + '</div>';
+    }).join('') : '<div class="my-order-status">Aucune commande.</div>';
   }
-  function hideMyOrderPanel(){
-    document.getElementById('my-order-overlay').classList.add('hidden');
+  function stopWatch(id){ if(myUnsubs[id]){ myUnsubs[id](); delete myUnsubs[id]; } }
+  function watchOrder(o){
+    if(myUnsubs[o.id] || o.state !== 'attente') return;
+    myUnsubs[o.id] = db.collection('orders').doc(o.id).onSnapshot(async (snap) => {
+      if(snap.exists) return;
+      // la commande a quitté la file de la caisse : on lit son résultat dans l'archive
+      let st = 'annulee', motif = '';
+      try{
+        const a = await db.collection('archive').doc(o.id).get();
+        if(a.exists){ const d = a.data(); st = d.orderStatus === 'validee' ? 'validee' : 'annulee'; motif = d.cancelReason || ''; }
+      }catch(e){ return; }
+      stopWatch(o.id); o.state = st; o.motif = motif; saveMy(); renderMyOrders();
+    }, () => {});
   }
+  function addMyOrder(o){ myOrders.push(o); saveMy(); renderMyOrders(); watchOrder(o); }
+  function showMyOrderPanel(){ renderMyOrders(); document.getElementById('my-order-overlay').classList.remove('hidden'); }
+  function hideMyOrderPanel(){ document.getElementById('my-order-overlay').classList.add('hidden'); }
   document.getElementById('my-order-close-btn').addEventListener('click', hideMyOrderPanel);
 
-  document.getElementById('my-order-cancel-btn').addEventListener('click', async () => {
-    if(!lastOrderId) return;
-    const sure = confirm('Voulez-vous vraiment annuler votre commande ?');
-    if(!sure) return;
-
+  document.getElementById('my-order-items').addEventListener('click', async (e) => {
+    const rm = e.target.closest('button[data-remove]');
+    if(rm){ myOrders = myOrders.filter(x => x.id !== rm.dataset.remove); saveMy(); renderMyOrders(); return; }
+    const b = e.target.closest('button[data-cancel]'); if(!b) return;
+    const o = myOrders.find(x => x.id === b.dataset.cancel); if(!o || o.state !== 'attente') return;
+    if(!confirm('Voulez-vous vraiment annuler cette commande ?')) return;
     try{
-      const snap = await db.collection('orders').doc(lastOrderId).get();
-      if(!snap.exists){
-        document.getElementById('my-order-status').textContent = 'Cette commande a déjà été prise en charge, elle ne peut plus être annulée.';
-        return;
-      }
-      await db.collection('orders').doc(lastOrderId).delete();
-      hideMyOrderPanel();
-      document.getElementById('my-order-float').classList.add('hidden');
-      lastOrderId = null;
-      lastOrderSummary = null;
-      orderSent = false; // le client peut repasser une nouvelle commande
-      await showModal('Commande annulée', 'Votre commande a bien été annulée.', '', true);
-    } catch(err){
+      const snap = await db.collection('orders').doc(o.id).get();
+      if(!snap.exists){ alert("Cette commande vient d'être traitée par la caisse : son statut va se mettre à jour."); return; }
+      stopWatch(o.id);
+      await db.collection('orders').doc(o.id).delete();
+      o.state = 'annulee_client'; saveMy(); renderMyOrders();
+    }catch(err){
       console.error('Erreur annulation :', err);
+      watchOrder(o);
       alert("Erreur : impossible d'annuler la commande pour le moment.");
     }
   });
+
+  // restauration des commandes de cet appareil (12 h) après rechargement de la page
+  try{
+    const saved = JSON.parse(localStorage.getItem(MY_KEY) || '[]');
+    myOrders = saved.filter(o => o && o.id && Date.now() - (o.createdMs || 0) < 12 * 3600000);
+    saveMy(); renderMyOrders(); myOrders.forEach(watchOrder);
+  }catch(e){}
 
   function toggleCart(forceOpen){
     const drawer = document.getElementById('cart-drawer');
