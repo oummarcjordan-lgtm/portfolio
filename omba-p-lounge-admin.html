@@ -162,6 +162,19 @@
   .pm-btn.alt{background:none;border:1px solid var(--line);color:var(--cream);}
   .pm-sec{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;}
   #pm-status{font-size:12px;min-height:16px;color:var(--cream-dim);}
+  header h1{flex:1;font-size:17px;}
+  #menu-btn{background:none;border:1px solid var(--line);border-radius:10px;width:42px;height:42px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;padding:0;flex-shrink:0;}
+  #menu-btn span{display:block;width:20px;height:2px;background:var(--cream);border-radius:2px;}
+  #drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:130;opacity:0;pointer-events:none;transition:opacity .2s;}
+  #drawer-overlay.open{opacity:1;pointer-events:auto;}
+  #drawer{position:fixed;top:0;bottom:0;left:0;width:82%;max-width:300px;background:var(--bg-raised);border-right:1px solid var(--line);z-index:140;transform:translateX(-100%);transition:transform .25s;padding:22px 16px;display:flex;flex-direction:column;gap:4px;overflow:auto;}
+  #drawer.open{transform:none;}
+  .dr-head{padding-bottom:14px;margin-bottom:8px;border-bottom:1px solid var(--line);}
+  #admin-name-val{font:700 17px 'Fraunces',serif;color:var(--cream);}
+  #dr-role{font-size:12px;color:var(--gold);}
+  #drawer .dr-item{background:none;border:none;color:var(--cream);text-align:left;padding:13px 10px;border-radius:10px;font-size:15px;cursor:pointer;width:100%;margin:0;font-family:'Work Sans',sans-serif;}
+  #drawer .dr-item:active{background:var(--bg-card);}
+  #drawer #logout-btn{color:#e8836b;margin-top:auto;}
 </style>
 </head>
 <body>
@@ -173,13 +186,6 @@
   <input id="login-pass" type="password" autocomplete="current-password" placeholder="Mot de passe" style="letter-spacing:0">
   <button id="login-btn" type="button">Se connecter</button>
   <button id="google-login-btn" type="button" style="background:none;border:1px solid var(--line);color:var(--cream)">Continuer avec Google</button>
-  <button id="sms-toggle-btn" type="button" style="background:none;border:none;color:var(--cream-dim);text-decoration:underline;font-size:13px;width:auto;padding:4px">Connexion par SMS</button>
-  <div id="sms-box" class="hidden" style="width:100%;max-width:280px;flex-direction:column;gap:8px">
-    <input id="sms-phone" type="tel" placeholder="+237 6XX XX XX XX" style="letter-spacing:0">
-    <button id="sms-send-btn" type="button">Recevoir le code</button>
-    <input id="sms-code" type="text" inputmode="numeric" maxlength="6" placeholder="Code reçu" class="hidden" style="letter-spacing:.2em">
-    <button id="sms-confirm-btn" type="button" class="hidden">Valider le code</button>
-  </div>
   <div id="login-error"></div>
 </div>
 
@@ -200,13 +206,22 @@
 
 <div id="app" class="hidden">
   <header>
+    <button id="menu-btn" type="button" aria-label="Menu"><span></span><span></span><span></span></button>
     <h1 id="app-title">O'Mba'p, <span>K Stay</span> & K-Dreams — Tableau de bord</h1>
-    <div style="text-align:right;">
-      <div style="margin-bottom:4px;"><button id="avatar-btn" class="avatar" type="button" title="Mon profil"></button><span id="admin-name-val" style="font-size:12px; color:var(--gold);"></span></div>
-      <button id="switch-etab-btn" type="button">🔀 Changer d'établissement</button>
-      <button id="logout-btn" type="button">Se déconnecter</button>
-    </div>
+    <button id="avatar-btn" class="avatar" type="button" title="Menu" style="margin:0"></button>
   </header>
+  <div id="drawer-overlay"></div>
+  <aside id="drawer">
+    <div class="dr-head">
+      <div id="dr-photo" class="avatar" data-go="pm-photo" style="width:64px;height:64px;font-size:26px;margin:0 0 10px"></div>
+      <div id="admin-name-val"></div><div id="dr-role"></div>
+    </div>
+    <button class="dr-item" type="button" data-go="pm-photo">👤 Mon profil et photo</button>
+    <button class="dr-item" type="button" data-go="pm-newpass">🔑 Mot de passe</button>
+    <button class="dr-item" type="button" data-go="pm-google">🔗 Compte Gmail lié</button>
+    <button class="dr-item" id="switch-etab-btn" type="button">🔀 Changer d'établissement</button>
+    <button class="dr-item" id="logout-btn" type="button">⎋ Se déconnecter</button>
+  </aside>
 
   <div class="date-row">
     <label for="filter-date">Rapport du :</label>
@@ -309,8 +324,7 @@
   <div class="pm-sec"><h3>Mot de passe</h3><input id="pm-newpass" type="password" autocomplete="new-password" placeholder="Nouveau mot de passe (6 caractères min.)"><button id="pm-passbtn" class="pm-btn" type="button">Changer</button></div>
   <div class="pm-sec"><h3>Comptes liés</h3><div id="pm-links" style="font-size:13px;margin-bottom:8px"></div>
     <button id="pm-google" class="pm-btn alt" type="button">Lier mon compte Gmail</button>
-    <input id="pm-phone" type="tel" placeholder="+237 6XX XX XX XX"><button id="pm-sendcode" class="pm-btn alt" type="button">Lier mon numéro (SMS)</button>
-    <input id="pm-code" type="text" inputmode="numeric" maxlength="6" placeholder="Code reçu" class="hidden"><button id="pm-confirm" class="pm-btn hidden" type="button">Valider le code</button></div>
+</div>
   <div id="pm-status"></div>
 </div></div>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -382,17 +396,6 @@
   $('login-btn').addEventListener('click', tryLogin);
   $('login-pass').addEventListener('keydown', (e) => { if(e.key==='Enter') tryLogin(); });
   $('google-login-btn').addEventListener('click', () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => loginErr(msg(e))));
-  $('sms-toggle-btn').addEventListener('click', () => { const b=$('sms-box'); b.classList.toggle('hidden'); b.style.display = b.classList.contains('hidden') ? '' : 'flex'; });
-  let smsConf = null, smsVerifier = null;
-  function sendSms(phoneId, sendBtnId, codeId, confirmId, linking, done){
-    const num = $(phoneId).value.replace(/\s+/g,'');
-    if(!smsVerifier) smsVerifier = new firebase.auth.RecaptchaVerifier(sendBtnId, {size:'invisible'});
-    const p = linking ? currentUser.linkWithPhoneNumber(num, smsVerifier) : auth.signInWithPhoneNumber(num, smsVerifier);
-    p.then(r => { smsConf = r; $(codeId).classList.remove('hidden'); $(confirmId).classList.remove('hidden'); done(''); })
-     .catch(e => { done(msg(e)); try{ smsVerifier.clear(); }catch(_){} smsVerifier = null; });
-  }
-  $('sms-send-btn').addEventListener('click', () => sendSms('sms-phone','sms-send-btn','sms-code','sms-confirm-btn',false,loginErr));
-  $('sms-confirm-btn').addEventListener('click', () => smsConf && smsConf.confirm($('sms-code').value.trim()).catch(e => loginErr(msg(e))));
   document.getElementById('logout-btn').addEventListener('click', () => {
     auth.signOut().then(() => location.reload());
   });
@@ -426,17 +429,23 @@
 
   function updateAvatar(){
     const photo = currentProfile.photo, ini = (currentAdminName || '?').charAt(0).toUpperCase();
-    ['avatar-btn','pm-photo'].forEach(id => { $(id).innerHTML = photo ? '<img alt="" src="'+photo+'">' : ini; });
+    ['avatar-btn','pm-photo','dr-photo'].forEach(id => { $(id).innerHTML = photo ? '<img alt="" src="'+photo+'">' : ini; });
     $('admin-name-val').textContent = currentAdminName || '';
+    $('dr-role').textContent = currentProfile.role === 'dev' ? 'Développeur' : 'Propriétaire';
   }
 
   // ---------- Profil : photo, mot de passe, comptes liés ----------
   const pmStatus = (m) => { $('pm-status').textContent = m || ''; };
   function renderLinks(){
     const ids = (currentUser.providerData || []).map(p => p.providerId);
-    $('pm-links').innerHTML = 'Gmail : ' + (ids.includes('google.com') ? '✅ lié' : 'non lié') + '<br>Téléphone : ' + (ids.includes('phone') ? '✅ lié' : 'non lié');
+    $('pm-links').innerHTML = 'Gmail : ' + (ids.includes('google.com') ? '✅ lié' : 'non lié');
   }
-  $('avatar-btn').addEventListener('click', () => { renderLinks(); pmStatus(''); $('profile-modal').classList.remove('hidden'); });
+  const setDrawer = (o) => { $('drawer').classList.toggle('open', o); $('drawer-overlay').classList.toggle('open', o); };
+  const openProfile = (id) => { renderLinks(); pmStatus(''); $('profile-modal').classList.remove('hidden'); setTimeout(() => $(id).scrollIntoView({block:'center'}), 50); };
+  $('menu-btn').addEventListener('click', () => setDrawer(true));
+  $('avatar-btn').addEventListener('click', () => setDrawer(true));
+  $('drawer-overlay').addEventListener('click', () => setDrawer(false));
+  document.querySelectorAll('#drawer .dr-item, #dr-photo').forEach(b => b.addEventListener('click', () => { setDrawer(false); if(b.dataset.go) openProfile(b.dataset.go); }));
   $('pm-close').addEventListener('click', () => $('profile-modal').classList.add('hidden'));
   $('pm-file').addEventListener('change', (e) => {
     const f = e.target.files[0]; if(!f) return;
@@ -454,8 +463,6 @@
     currentUser.updatePassword($('pm-newpass').value).then(() => { $('pm-newpass').value=''; pmStatus('Mot de passe changé ✅'); }).catch(e => pmStatus(msg(e)));
   });
   $('pm-google').addEventListener('click', () => currentUser.linkWithPopup(new firebase.auth.GoogleAuthProvider()).then(() => { renderLinks(); pmStatus('Gmail lié ✅'); }).catch(e => pmStatus(msg(e))));
-  $('pm-sendcode').addEventListener('click', () => sendSms('pm-phone','pm-sendcode','pm-code','pm-confirm',true, m => pmStatus(m || 'Code envoyé par SMS.')));
-  $('pm-confirm').addEventListener('click', () => smsConf && smsConf.confirm($('pm-code').value.trim()).then(() => { renderLinks(); pmStatus('Numéro lié ✅'); }).catch(e => pmStatus(msg(e))));
 
   function showEtabSelect(){
     document.getElementById('login-screen').classList.add('hidden');
