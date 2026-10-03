@@ -193,6 +193,13 @@
 .cs-times{display:flex;gap:12px;flex-wrap:wrap;}
 .cs-sched input[type=time]{background:var(--bg-card);color:var(--cream);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:15px;}
 .cs-save{margin-top:8px;border:0;border-radius:8px;padding:10px 14px;background:var(--gold);color:#111;font-weight:700;font-size:13px;cursor:pointer;}
+.ct-row{padding:9px 0;border-top:1px solid var(--line);font-size:13px;}
+.ct-row b{color:var(--cream);}
+.ct-bad{color:var(--ember);font-weight:600;}
+.ct-warn{background:rgba(226,87,43,.12);border:1px solid var(--ember);border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:13px;}
+.ct-in{background:var(--bg-card);color:var(--cream);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:14px;width:100%;box-sizing:border-box;margin:4px 0;}
+.ct-btn{border:0;border-radius:8px;padding:9px 12px;background:var(--gold);color:#111;font-weight:700;font-size:13px;cursor:pointer;margin-right:6px;}
+.ct-btn.alt{background:var(--bg-card);color:var(--cream);border:1px solid var(--line);}
 .cs-sub{font-size:11px;color:var(--cream-dim);margin-top:2px;}
 #caisses-panel details details{margin:0 10px 8px;}
 </style>
@@ -324,6 +331,24 @@
       <div id="caisses-box"><div class="panel-empty">Chargement…</div></div>
       <label for="caisses-msg" style="font-size:12px;color:var(--cream-dim);display:block;margin-top:10px;">Message affiché sur une caisse fermée (optionnel)</label>
       <input id="caisses-msg" type="text" placeholder="Ex. : Caisse fermée, réouverture demain à 8h">
+    </div>
+  </div>
+
+  <div class="panel-row" id="controle-panel">
+    <div class="panel" style="grid-column: 1 / -1;">
+      <h3>🕵️ Contrôle <small style="font-weight:400;color:var(--cream-dim);font-size:11px;">— validations et annulations du jour sélectionné</small></h3>
+      <div id="controle-box"><div class="panel-empty">Chargement…</div></div>
+    </div>
+  </div>
+
+  <div class="panel-row" id="caissieres-panel">
+    <div class="panel" style="grid-column: 1 / -1;">
+      <h3>👤 Caissières <small style="font-weight:400;color:var(--cream-dim);font-size:11px;">— code personnel pour chaque caissière</small></h3>
+      <input id="cq-name" class="ct-in" type="text" placeholder="Nom et prénom de la caissière">
+      <input id="cq-code" class="ct-in" type="text" inputmode="numeric" maxlength="8" placeholder="Code personnel (6 chiffres conseillés)">
+      <select id="cq-etab" class="ct-in"><option value="ombap">O'Mba'p Lounge</option><option value="kstay">K Stay</option><option value="kdreams">K-Dreams</option><option value="all">Tous les établissements</option></select>
+      <button id="cq-add" class="ct-btn" type="button">Ajouter la caissière</button>
+      <div id="cq-list" style="margin-top:10px;"></div>
     </div>
   </div>
 
@@ -531,6 +556,8 @@
     subscribeArchive();
     subscribePresence();
     subscribeCaisses();
+    subscribeControle();
+    subscribeCaissieres();
     if(currentAdminName === 'Marc (Développeur)'){
       document.getElementById('connections-panel').classList.remove('hidden');
       subscribeConnectionsLog();
@@ -1144,6 +1171,82 @@ function subscribeCaisses(){
     if(document.activeElement !== msg) msg.value = caissesState.message;
     renderCaisses();
   }, (err) => { box.innerHTML = '<div class="panel-empty">Lecture impossible : ' + err.message + '</div>'; });
+}
+</script>
+<script>
+/* ===== CONTRÔLE (journal d'audit) + CAISSIÈRES (codes personnels) ===== */
+const CAISSE_LABELS = { ombap: "O'Mba'p", kstay: 'K Stay', kd_restaurant: 'KD Restaurant', kd_rooftop: 'KD Rooftop', kd_salle_de_jeu: 'KD Salle de jeu', kd_espace_cigare: 'KD Espace cigare', kd_boite_de_nuit: 'KD Boîte de nuit', kd_hebergement: 'KD Hébergement' };
+const OMJ_SALT = 'omj-caisse-v1';
+const fcfa = (n) => (Number(n) || 0).toLocaleString('fr-FR') + ' FCFA';
+function omjSha(s){
+  return crypto.subtle.digest('SHA-256', new TextEncoder().encode(OMJ_SALT + ':' + s)).then(b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''));
+}
+let auditDocs = [], unsubAudit = null, unsubCq = null, cqDocs = [];
+function camDay(ms){ return new Date(ms + 3600000).toISOString().slice(0, 10); }
+function camHour(ms){ return new Date(ms + 3600000).toISOString().slice(11, 16).replace(':', 'h'); }
+function renderControle(){
+  const box = document.getElementById('controle-box');
+  const day = (document.getElementById('filter-date') || {}).value || camDay(Date.now());
+  const rows = auditDocs.filter(a => camDay(a.tsMs || 0) === day);
+  if(!rows.length){ box.innerHTML = '<div class="panel-empty">Aucune validation ni annulation enregistrée ce jour-là.</div>'; return; }
+  const by = {};
+  rows.forEach(a => {
+    const k = a.cashier || '—';
+    const s = by[k] = by[k] || { v: 0, vt: 0, c: 0, ct: 0, nomotif: 0, unver: false };
+    if(a.type === 'annulation'){ s.c++; s.ct += a.total || 0; if(!a.motif) s.nomotif++; } else { s.v++; s.vt += a.total || 0; }
+    if(!a.verified) s.unver = true;
+  });
+  const alerts = [];
+  Object.entries(by).forEach(([k, s]) => {
+    const n = s.v + s.c;
+    if(n >= 4 && s.c / n >= 0.25) alerts.push('⚠️ ' + escH(k) + ' : ' + s.c + ' annulation(s) sur ' + n + ' opérations (' + Math.round(100 * s.c / n) + ' %).');
+    if(s.nomotif) alerts.push('⚠️ ' + escH(k) + ' : ' + s.nomotif + ' annulation(s) sans motif.');
+  });
+  rows.filter(a => a.type === 'annulation' && (a.total || 0) >= 20000).forEach(a => alerts.push('⚠️ Annulation de ' + fcfa(a.total) + ' par ' + escH(a.cashier) + ' (' + escH(CAISSE_LABELS[a.caisse] || a.caisse) + ', ' + camHour(a.tsMs) + ').'));
+  box.innerHTML =
+    (alerts.length ? '<div class="ct-warn">' + alerts.join('<br>') + '</div>' : '') +
+    Object.entries(by).map(([k, s]) => '<div class="ct-row"><b>' + escH(k) + '</b> ' + (s.unver ? '<span class="ct-bad">⚠️ nom non vérifié</span>' : '✅') +
+      '<br>' + s.v + ' validée(s) · ' + fcfa(s.vt) + '<br>' + s.c + ' annulée(s) · ' + fcfa(s.ct) + '</div>').join('') +
+    '<div style="margin-top:10px;font-weight:600;">Détail</div>' +
+    rows.map(a => '<div class="ct-row">' + camHour(a.tsMs) + ' · ' + (a.type === 'annulation' ? '<span class="ct-bad">✕ Annulée</span>' : '✅ Validée') + ' · ' + escH(CAISSE_LABELS[a.caisse] || a.caisse) +
+      '<br>' + escH(a.cashier) + (a.verified ? ' ✅' : ' ⚠️') + (a.table ? ' · Table ' + escH(a.table) : '') + ' · ' + fcfa(a.total) + (a.motif ? '<br>Motif : ' + escH(a.motif) : '') + '</div>').join('');
+}
+function subscribeControle(){
+  if(unsubAudit) return;
+  const fd = document.getElementById('filter-date'); if(fd) fd.addEventListener('change', renderControle);
+  const t = document.getElementById('today-btn'); if(t) t.addEventListener('click', () => setTimeout(renderControle, 50));
+  unsubAudit = db.collection('audit').orderBy('tsMs', 'desc').limit(1000).onSnapshot((s) => {
+    auditDocs = s.docs.map(d => d.data()); renderControle();
+  }, (e) => { document.getElementById('controle-box').innerHTML = '<div class="panel-empty">Lecture impossible : ' + escH(e.message) + '</div>'; });
+}
+function renderCaissieres(){
+  const el = document.getElementById('cq-list');
+  if(!cqDocs.length){ el.innerHTML = '<div class="panel-empty">Aucune caissière enregistrée.</div>'; return; }
+  const E = { ombap: "O'Mba'p", kstay: 'K Stay', kdreams: 'K-Dreams', all: 'Tous' };
+  el.innerHTML = cqDocs.map(c => '<div class="ct-row"><b>' + escH(c.name) + '</b> · ' + (E[c.etab] || c.etab) + ' · ' + (c.actif ? '🟢 active' : '🔴 désactivée') + '<br>' +
+    '<button class="ct-btn alt" type="button" data-cq="' + c.id + '" data-act="toggle">' + (c.actif ? 'Désactiver' : 'Activer') + '</button>' +
+    '<button class="ct-btn alt" type="button" data-cq="' + c.id + '" data-act="del">Supprimer</button></div>').join('');
+}
+function subscribeCaissieres(){
+  if(unsubCq) return;
+  document.getElementById('cq-add').addEventListener('click', async () => {
+    const name = document.getElementById('cq-name').value.trim(), code = document.getElementById('cq-code').value.trim(), etab = document.getElementById('cq-etab').value;
+    if(name.length < 2 || !/^[0-9]{4,8}$/.test(code)) return alert('Indique un nom et un code de 4 à 8 chiffres.');
+    const hash = await omjSha(code);
+    if(cqDocs.some(c => c.hash === hash)) return alert('Ce code est déjà utilisé : choisis-en un autre.');
+    db.collection('caissieres').add({ name: name, hash: hash, etab: etab, actif: true, createdMs: Date.now() })
+      .then(() => { document.getElementById('cq-name').value = ''; document.getElementById('cq-code').value = ''; })
+      .catch(e => alert('Action refusée : ' + e.message));
+  });
+  document.getElementById('cq-list').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-cq]'); if(!b) return;
+    const c = cqDocs.find(x => x.id === b.dataset.cq); if(!c) return;
+    const ref = db.collection('caissieres').doc(c.id);
+    if(b.dataset.act === 'del'){ if(confirm('Supprimer ' + c.name + ' ?')) ref.delete().catch(er => alert('Action refusée : ' + er.message)); }
+    else ref.update({ actif: !c.actif }).catch(er => alert('Action refusée : ' + er.message));
+  });
+  unsubCq = db.collection('caissieres').onSnapshot((s) => { cqDocs = s.docs.map(d => ({ id: d.id, ...d.data() })); renderCaissieres(); },
+    (e) => { document.getElementById('cq-list').innerHTML = '<div class="panel-empty">Lecture impossible : ' + escH(e.message) + '</div>'; });
 }
 </script>
 </body>
