@@ -414,7 +414,7 @@
       <h3>👤 Caissières <small style="font-weight:400;color:var(--cream-dim);font-size:11px;">— code personnel pour chaque caissière</small></h3>
       <input id="cq-name" class="ct-in" type="text" placeholder="Nom et prénom de la caissière">
       <input id="cq-code" class="ct-in" type="text" inputmode="numeric" maxlength="8" placeholder="Code personnel (6 chiffres conseillés)">
-      <select id="cq-etab" class="ct-in"><option value="ombap">O'Mba'p Lounge — Caisse</option><option value="kstay">K Stay — Caisse</option><optgroup label="K-Dreams"><option value="etab:kdreams">K-Dreams — Toutes les caisses</option><option value="kd_restaurant">K-Dreams — Restaurant</option><option value="kd_rooftop">K-Dreams — Rooftop</option><option value="kd_salle_de_jeu">K-Dreams — Salle de jeu</option><option value="kd_espace_cigare">K-Dreams — Espace cigare</option><option value="kd_boite_de_nuit">K-Dreams — Boîte de nuit</option><option value="kd_hebergement">K-Dreams — Hébergement</option></optgroup><option value="all">Toutes les caisses (3 établissements)</option></select>
+      <select id="cq-etab" class="ct-in"><optgroup label="O'Mba'p Lounge"><option value="ombap">O'Mba'p — Rooftop + Restaurant</option><option value="ombap_rooftop">O'Mba'p — Rooftop</option><option value="ombap_restaurant">O'Mba'p — Restaurant</option></optgroup><option value="kstay">K Stay — Caisse</option><optgroup label="K-Dreams"><option value="etab:kdreams">K-Dreams — Toutes les caisses</option><option value="kd_restaurant">K-Dreams — Restaurant</option><option value="kd_rooftop">K-Dreams — Rooftop</option><option value="kd_salle_de_jeu">K-Dreams — Salle de jeu</option><option value="kd_espace_cigare">K-Dreams — Espace cigare</option><option value="kd_boite_de_nuit">K-Dreams — Boîte de nuit</option><option value="kd_hebergement">K-Dreams — Hébergement</option></optgroup><option value="all">Toutes les caisses (3 établissements)</option></select>
       <button id="cq-add" class="ct-btn" type="button">Ajouter la caissière</button>
       <div id="cq-list" style="margin-top:10px;"></div>
     </div>
@@ -679,7 +679,7 @@
       connEl.innerHTML = '<div class="panel-empty">Aucune connexion ce jour-là.</div>';
     } else {
       connEl.innerHTML = dayConn.map(c =>
-        '<div class="panel-row-line"><span class="name">' + (c.cashierName ? c.cashierName + ' · ' : '') + (c.role||'—') + ' · ' + (c.device||'—') + ' · ' + etabShortLabel(c) +
+        '<div class="panel-row-line"><span class="name">' + (c.cashierName ? c.cashierName + ' · ' : '') + (c.role||'—') + ' · ' + (c.device||'—') + ' · ' + etabShortLabel(c) + (whereLabel(c) ? ' — ' + whereLabel(c) : '') +
         '</span><span class="val">' + fmtDateTime(c.timestamp) + '</span></div>'
       ).join('');
     }
@@ -771,7 +771,7 @@
     const el = document.getElementById('presence-log');
     if(!el) return;
     const etabFilter = document.getElementById('filter-etablissement').value;
-    const docs = Object.entries(presenceData).filter(([id, p]) => !etabFilter || p.etablissement === etabFilter);
+    const docs = Object.entries(presenceData).filter(([id, p]) => id !== 'ombap-caisse' && (!etabFilter || p.etablissement === etabFilter)); // 'ombap-caisse' = ancienne caisse unique, ignorée
     if(docs.length === 0){
       el.innerHTML = '<div class="panel-empty">Aucune caissière enregistrée pour le moment.</div>';
       return;
@@ -784,7 +784,7 @@
         ? ('Connectée depuis ' + fmtDateTime(p.loginAt))
         : (p.loggedOutAt ? ('Déconnectée à ' + fmtDateTime(p.loggedOutAt)) : (lastMs ? ('Dernière activité : ' + fmtDateTime(p.lastActive)) : 'Jamais connectée'));
       return '<div class="presence-row">' +
-        '<div><span class="presence-dot ' + (isOnline ? 'online' : 'offline') + '"></span><b>' + (p.cashierName || p.role || 'Caisse') + ' · ' + etabShortLabel(p) + '</b>' +
+        '<div><span class="presence-dot ' + (isOnline ? 'online' : 'offline') + '"></span><b>' + (p.cashierName || p.role || 'Caisse') + ' · ' + etabShortLabel(p) + (whereLabel(p) ? ' — ' + whereLabel(p) : '') + '</b>' +
         '<div class="presence-detail">' + (isOnline ? 'En ligne — ' : '') + sinceLabel + '</div></div>' +
         '<div style="text-align:right; font-size:12px; color:var(--cream-dim);">' + (p.device || '—') + '</div>' +
         '</div>';
@@ -1160,7 +1160,7 @@
 <script>
 /* ===== SECTION CAISSES — écrit dans Firestore system/caisses {etat:{id:bool}, message} ===== */
 const CAISSES = {
-  ombap:   { label: "O'Mba'p Lounge", items: [["ombap", "Caisse O'Mba'p"]] },
+  ombap:   { label: "O'Mba'p Lounge", items: [["ombap_rooftop", "Rooftop"], ["ombap_restaurant", "Restaurant"]] },
   kstay:   { label: "K Stay",         items: [["kstay", "Caisse K Stay"]] },
   kdreams: { label: "K-Dreams",       items: [["kd_restaurant","Restaurant"],["kd_rooftop","Rooftop"],["kd_salle_de_jeu","Salle de jeu"],["kd_espace_cigare","Espace cigare"],["kd_boite_de_nuit","Boîte de nuit"],["kd_hebergement","Hébergement"]] }
 };
@@ -1235,7 +1235,12 @@ function subscribeCaisses(){
   msg.addEventListener('change', () => { caissesRef().set({ message: msg.value.trim() }, { merge: true }).catch(e => alert('Action refusée : ' + e.message)); });
   unsubCaisses = caissesRef().onSnapshot((s) => {
     const d = s.exists ? s.data() : {};
-    caissesState = { etat: d.etat || {}, horaires: d.horaires || {}, message: d.message || '' };
+    caissesState = { etat: Object.assign({}, d.etat || {}), horaires: Object.assign({}, d.horaires || {}), message: d.message || '' };
+    // Reprise des anciens réglages de la caisse unique « ombap » tant que les 2 nouvelles caisses n'ont pas les leurs
+    ['ombap_rooftop', 'ombap_restaurant'].forEach(function(k){
+      if(caissesState.etat[k] === undefined && caissesState.etat.ombap !== undefined) caissesState.etat[k] = caissesState.etat.ombap;
+      if(caissesState.horaires[k] === undefined && caissesState.horaires.ombap !== undefined) caissesState.horaires[k] = caissesState.horaires.ombap;
+    });
     if(document.activeElement !== msg) msg.value = caissesState.message;
     renderCaisses();
   }, (err) => { box.innerHTML = '<div class="panel-empty">Lecture impossible : ' + err.message + '</div>'; });
@@ -1243,7 +1248,7 @@ function subscribeCaisses(){
 </script>
 <script>
 /* ===== CONTRÔLE (journal d'audit) + CAISSIÈRES (codes personnels) ===== */
-const CAISSE_LABELS = { ombap: "O'Mba'p", kstay: 'K Stay', kd_restaurant: 'KD Restaurant', kd_rooftop: 'KD Rooftop', kd_salle_de_jeu: 'KD Salle de jeu', kd_espace_cigare: 'KD Espace cigare', kd_boite_de_nuit: 'KD Boîte de nuit', kd_hebergement: 'KD Hébergement' };
+const CAISSE_LABELS = { ombap: "O'Mba'p (Rooftop + Restaurant)", ombap_rooftop: "O'Mba'p Rooftop", ombap_restaurant: "O'Mba'p Restaurant", kstay: 'K Stay', kd_restaurant: 'KD Restaurant', kd_rooftop: 'KD Rooftop', kd_salle_de_jeu: 'KD Salle de jeu', kd_espace_cigare: 'KD Espace cigare', kd_boite_de_nuit: 'KD Boîte de nuit', kd_hebergement: 'KD Hébergement' };
 const OMJ_SALT = 'omj-caisse-v1';
 const fcfa = (n) => (Number(n) || 0).toLocaleString('fr-FR') + ' FCFA';
 function omjSha(s){
@@ -1307,7 +1312,7 @@ function subscribeCaissieres(){
     if(name.length < 2 || !/^[0-9]{4,8}$/.test(code)) return alert('Indique un nom et un code de 4 à 8 chiffres.');
     const hash = await omjSha(code);
     if(cqDocs.some(c => c.hash === hash)) return alert('Ce code est déjà utilisé : choisis-en un autre.');
-    db.collection('caissieres').add({ name: name, hash: hash, caisse: etab, etab: (etab === 'all' ? 'all' : (etab.indexOf('kd_') === 0 || etab === 'etab:kdreams') ? 'kdreams' : etab), actif: true, createdMs: Date.now() })
+    db.collection('caissieres').add({ name: name, hash: hash, caisse: etab, etab: (etab === 'all' ? 'all' : (etab.indexOf('kd_') === 0 || etab === 'etab:kdreams') ? 'kdreams' : etab.indexOf('ombap_') === 0 ? 'ombap' : etab), actif: true, createdMs: Date.now() })
       .then(() => { document.getElementById('cq-name').value = ''; document.getElementById('cq-code').value = ''; })
       .catch(e => alert('Action refusée : ' + e.message));
   });
