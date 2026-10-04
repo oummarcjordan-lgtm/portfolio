@@ -154,6 +154,15 @@
   .hidden{display:none !important;}
   .avatar{width:34px;height:34px;border-radius:50%;border:2px solid var(--gold);background:var(--bg-card);color:var(--gold);font:700 15px 'Fraunces',serif;cursor:pointer;padding:0;overflow:hidden;vertical-align:middle;margin-right:6px;}
   .avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  #bell-btn{position:relative;background:none;border:1px solid var(--line);border-radius:10px;width:42px;height:42px;font-size:18px;cursor:pointer;padding:0;flex-shrink:0;color:var(--cream);}
+  .nbadge{position:absolute;top:-6px;right:-6px;background:#e8836b;color:#fff;border-radius:10px;min-width:18px;height:18px;font:700 11px 'Work Sans',sans-serif;display:flex;align-items:center;justify-content:center;padding:0 4px;}
+  .nbadge.hidden{display:none;}
+  #rp-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:150;display:flex;align-items:center;justify-content:center;padding:16px;}
+  #rp-modal.hidden{display:none;}
+  .rp-row{background:var(--bg-card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:13px;line-height:1.5;}
+  .rp-row.unread{border-color:var(--gold);}
+  .rp-row .rp-t{font-weight:700;color:var(--cream);}
+  .rp-tag{font-size:11px;border:1px solid var(--line);border-radius:10px;padding:1px 7px;margin-left:6px;color:var(--gold);}
   #profile-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:150;display:flex;align-items:center;justify-content:center;padding:16px;}
   .pm-card{background:var(--bg-raised);border:1px solid var(--line);border-radius:14px;padding:18px;width:100%;max-width:360px;max-height:90vh;overflow:auto;}
   .pm-card h3{margin:0 0 10px;font-size:15px;color:var(--gold);font-family:'Work Sans',sans-serif;}
@@ -302,6 +311,7 @@
   <header>
     <button id="menu-btn" type="button" aria-label="Menu"><span></span><span></span><span></span></button>
     <h1 id="app-title">O'Mba'p, <span>K Stay</span> & K-Dreams — Tableau de bord</h1>
+    <button id="bell-btn" type="button" aria-label="Notifications">🔔<span id="bell-badge" class="nbadge hidden">0</span></button>
     <button id="avatar-btn" class="avatar" type="button" title="Menu" style="margin:0"></button>
   </header>
   <div id="drawer-overlay"></div>
@@ -310,6 +320,8 @@
       <div id="dr-photo" class="avatar" data-go="pm-photo" style="width:64px;height:64px;font-size:26px;margin:0 0 10px"></div>
       <div id="admin-name-val"></div><div id="dr-role"></div>
     </div>
+    <button class="dr-item" id="dr-reports" type="button">📁 Mes rapports</button>
+    <button class="dr-item" id="dr-notifs" type="button">🔔 Notifications</button>
     <button class="dr-item" type="button" data-go="pm-photo">👤 Mon profil et photo</button>
     <button class="dr-item" type="button" data-go="pm-newpass">🔑 Mot de passe</button>
     <button class="dr-item" type="button" data-go="pm-google">🔗 Compte Gmail lié</button>
@@ -439,6 +451,10 @@
 <!-- ======================================================================
      FIREBASE — mêmes clés que les autres pages du projet.
      ====================================================================== -->
+<div id="rp-modal" class="hidden"><div class="pm-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 id="rp-title" style="margin:0"></h3><button id="rp-close" class="pm-btn alt" type="button" style="margin:0">Fermer</button></div>
+  <div id="rp-body"></div>
+</div></div>
 <div id="profile-modal" class="hidden"><div class="pm-card">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="margin:0">Mon profil</h3><button id="pm-close" class="pm-btn alt" type="button" style="margin:0">Fermer</button></div>
   <div style="text-align:center"><button id="pm-photo" class="avatar" type="button" style="width:84px;height:84px;font-size:34px;margin:0 0 8px"></button><br>
@@ -626,6 +642,7 @@
     subscribeCaisses();
     subscribeControle();
     subscribeCaissieres();
+    subscribeRapports();
     if(currentAdminName === 'Marc (Développeur)'){
       document.getElementById('connections-panel').classList.remove('hidden');
       subscribeConnectionsLog();
@@ -797,6 +814,7 @@
   let archMain = [];
   let archKD = [];
   let archiveSubscribed = false;
+  let archMainReady = false, archKDReady = false;
 
   // Convertit un document K-Dreams (kdreams_archive) vers le format commun du tableau de bord
   function normKD(d){
@@ -824,18 +842,21 @@
       (b.archivedAt?.toMillis?.() || b.paymentValidatedAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0) -
       (a.archivedAt?.toMillis?.() || a.paymentValidatedAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0));
     renderAll();
+    autoReports();
   }
   function subscribeArchive(){
     if(archiveSubscribed) { renderAll(); return; }
     archiveSubscribed = true;
     db.collection('archive').onSnapshot((snap) => {
       archMain = snap.docs.map(d => ({id: d.id, ...d.data()}));
+      archMainReady = true;
       mergeArchive();
     }, (err) => console.error(err));
     db.collection('kdreams_archive').onSnapshot((snap) => {
       archKD = snap.docs.map(d => normKD({id: d.id, ...d.data()}));
+      archKDReady = true;
       mergeArchive();
-    }, (err) => console.error('K-Dreams archive :', err));
+    }, (err) => { archKDReady = true; console.error('K-Dreams archive :', err); });
   }
 
   function computeDayStats(dateStr, etabFilter){
@@ -981,6 +1002,9 @@
   function downloadDailyReport(){
     const dateStr = document.getElementById('filter-date').value || todayStr();
     const etabFilter = document.getElementById('filter-etablissement').value;
+    buildDailyReport(dateStr, etabFilter, true);
+  }
+  function buildDailyReport(dateStr, etabFilter, saveToArchive){
     const etabTitle = etabFilter === 'kstay' ? 'K Stay' : etabFilter === 'ombap' ? "O'Mba'p Lounge" : etabFilter === 'kdreams' ? 'K-Dreams' : "O'Mba'p, K Stay & K-Dreams";
     const stats = computeDayStats(dateStr, etabFilter);
     const { jsPDF } = window.jspdf;
@@ -1067,7 +1091,91 @@
     });
 
     doc.save('rapport-' + (etabFilter || 'tous') + '-' + dateStr + '.pdf');
+    if(saveToArchive) saveReport(dateStr, etabFilter, stats, false);
   }
+
+  // ---------- Archive des rapports + notifications ----------
+  const ETAB_NAMES = { ombap: "O'Mba'p", kstay: 'K Stay', kdreams: 'K-Dreams', '': 'Tous les établissements' };
+  let rapportsDocs = [], rapportsReady = false, rapportsSub = false, autoBusy = false, rpMode = '';
+  const repId = (date, etab) => (etab || 'tous') + '_' + date;
+  function saveReport(dateStr, etab, stats, auto){
+    return db.collection('rapports').doc(repId(dateStr, etab)).set({
+      etab: etab || '', date: dateStr, revenue: stats.revenue, validated: stats.validated.length,
+      cancelled: stats.cancelled.length, total: stats.dayOrders.length,
+      auto: !!auto, createdMs: Date.now(), by: currentAdminName || ''
+    }).catch(e => console.error('Rapport non enregistré :', e));
+  }
+  function subscribeRapports(){
+    if(rapportsSub) return; rapportsSub = true;
+    db.collection('rapports').orderBy('date', 'desc').limit(300).onSnapshot((snap) => {
+      rapportsDocs = snap.docs.map(d => ({ id: d.id, ...d.data() })); rapportsReady = true;
+      autoReports(); updateBell(); if(rpMode === 'reports') renderReports();
+    }, (e) => { rapportsReady = false; console.error('Rapports :', e); });
+  }
+  // Rapport des jours terminés : enregistré tout seul à l'ouverture du dashboard (30 derniers jours)
+  function autoReports(){
+    if(autoBusy || !rapportsReady || !archMainReady || !archKDReady) return;
+    autoBusy = true;
+    const have = new Set(rapportsDocs.map(r => r.id)), days = new Set(), today = todayStr();
+    allArchived.forEach(o => { const k = orderDateKey(o); if(k && k < today) days.add(k); });
+    const since = new Date(Date.now() - 30*86400000).toISOString().slice(0,10);
+    Array.from(days).filter(d => d >= since).forEach(d => {
+      ['ombap','kstay','kdreams'].forEach(et => {
+        if(have.has(repId(d, et))) return;
+        const st = computeDayStats(d, et);
+        if(st.dayOrders.length) saveReport(d, et, st, true);
+      });
+    });
+    setTimeout(() => { autoBusy = false; }, 5000);
+  }
+  const openRp = (mode) => { rpMode = mode; $('rp-modal').classList.remove('hidden'); mode === 'reports' ? renderReports() : renderNotifs(); };
+  function renderReports(){
+    $('rp-title').textContent = '📁 Mes rapports';
+    const f = $('filter-etablissement').value;
+    const rows = rapportsDocs.filter(r => !f || r.etab === f || r.etab === '');
+    if(!rows.length){ $('rp-body').innerHTML = '<div class="panel-empty">' + (rapportsReady ? 'Aucun rapport enregistré pour le moment. Ils apparaissent ici après chaque journée, ou quand tu télécharges un rapport.' : 'Lecture impossible : la règle Firestore « rapports » n\'est pas encore publiée.') + '</div>'; return; }
+    $('rp-body').innerHTML = rows.map(r => '<div class="rp-row"><span class="rp-t">' + new Date(r.date + 'T12:00:00').toLocaleDateString('fr-FR', {weekday:'short', day:'numeric', month:'long', year:'numeric'}) + '</span><span class="rp-tag">' + (r.auto ? 'Auto' : 'Téléchargé') + '</span><br>' +
+      escH(ETAB_NAMES[r.etab || '']) + '<br><b>' + (r.revenue || 0).toLocaleString('fr-FR') + ' FCFA</b> · ' + (r.validated || 0) + ' validée(s) · ' + (r.cancelled || 0) + ' annulée(s)<br>' +
+      '<button class="pm-btn alt" type="button" data-rd="' + r.date + '" data-re="' + (r.etab || '') + '" style="margin:6px 0 0">📥 PDF</button></div>').join('');
+  }
+  $('rp-body').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-rd]'); if(!b) return;
+    if(!archMainReady) return alert('Chargement des données… réessaie dans un instant.');
+    buildDailyReport(b.dataset.rd, b.dataset.re, false);
+  });
+  // Notifications : annulations, noms non vérifiés, rapports automatiques (lues/non lues par appareil)
+  const seenKey = () => 'omj_notif_seen_' + (currentUser ? currentUser.uid : '');
+  const getSeen = () => Number(localStorage.getItem(seenKey()) || 0);
+  function buildNotifs(){
+    const f = $('filter-etablissement').value, since = Date.now() - 14*86400000, list = [];
+    (typeof auditDocs !== 'undefined' ? auditDocs : []).forEach(a => {
+      if((a.tsMs || 0) < since || (f && a.etab && a.etab !== f)) return;
+      const where = escH(CAISSE_LABELS[a.caisse] || a.caisse || ''), who = escH(a.cashier || '—'), when = camDay(a.tsMs) + ' ' + camHour(a.tsMs);
+      if(a.type === 'annulation'){
+        const big = (a.total || 0) >= 20000;
+        list.push({ ms: a.tsMs, html: '<span class="rp-t">' + (big ? '🚨' : '✕') + ' Annulation de ' + fcfa(a.total) + '</span><br>' + who + ' · ' + where + (a.table ? ' · Table ' + escH(a.table) : '') + '<br>' + (a.motif ? 'Motif : ' + escH(a.motif) : '⚠️ Sans motif') + '<br><small>' + when + '</small>' });
+      } else if(!a.verified){
+        list.push({ ms: a.tsMs, html: '<span class="rp-t">⚠️ Nom non vérifié</span><br>' + who + ' a encaissé ' + fcfa(a.total) + ' · ' + where + '<br><small>' + when + '</small>' });
+      }
+    });
+    rapportsDocs.forEach(r => { if(r.auto && (r.createdMs || 0) >= since && (!f || r.etab === f)) list.push({ ms: r.createdMs, html: '<span class="rp-t">📁 Rapport du ' + new Date(r.date + 'T12:00:00').toLocaleDateString('fr-FR') + ' enregistré</span><br>' + escH(ETAB_NAMES[r.etab || '']) + ' · ' + (r.revenue || 0).toLocaleString('fr-FR') + ' FCFA' }); });
+    return list.sort((a, b) => b.ms - a.ms).slice(0, 60);
+  }
+  function updateBell(){
+    const n = buildNotifs().filter(x => x.ms > getSeen()).length, b = $('bell-badge');
+    b.textContent = n > 99 ? '99+' : n; b.classList.toggle('hidden', !n);
+  }
+  function renderNotifs(){
+    $('rp-title').textContent = '🔔 Notifications';
+    const seen = getSeen(), list = buildNotifs();
+    $('rp-body').innerHTML = list.length ? list.map(x => '<div class="rp-row' + (x.ms > seen ? ' unread' : '') + '">' + x.html + '</div>').join('') : '<div class="panel-empty">Rien à signaler.</div>';
+    localStorage.setItem(seenKey(), String(Date.now())); updateBell();
+  }
+  $('bell-btn').addEventListener('click', () => openRp('notifs'));
+  $('dr-notifs').addEventListener('click', () => openRp('notifs'));
+  $('dr-reports').addEventListener('click', () => openRp('reports'));
+  $('rp-close').addEventListener('click', () => { $('rp-modal').classList.add('hidden'); rpMode = ''; });
+  setInterval(updateBell, 20000);
 
   // ---------- Génération de la facture PDF (identique à l'interface caisse) ----------
   function generateInvoicePDF(o){
