@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
 <title>O'Mba'p Lounge — Menu</title>
 <link rel="preload" as="image" href="fond-ombap.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -524,6 +525,8 @@
   .sinfo{color:var(--cream-dim);font-size:12px;margin-top:10px;min-height:16px;}
   .srch-hide{display:none !important;}
   .noresult{color:var(--cream-dim);text-align:center;padding:40px 16px;line-height:1.5;}
+  /* Anti détection auto Safari iPhone (numéros/prix en bleu) */
+  a[href^="tel"], a[x-apple-data-detectors]{color:inherit !important;text-decoration:none !important;font:inherit !important}
 </style>
 </head>
 <body>
@@ -536,7 +539,7 @@
   <div class="mark">EAT · DRINK · DANCE · REST</div>
   <h1>O'Mba'p <span>Lounge</span></h1>
   <div class="tag">Restaurant · <a href="#hebergement" class="tag-link">Hébergement</a> · Rooftop · Grill · Pizzeria</div>
-  <div class="loc">Mini Prix Bastos, Yaoundé — +237 686 868 630</div>
+  <div class="loc">Mini Prix Bastos, Yaoundé — <a href="tel:+237686868630">+237 686 868 630</a></div>
   <div id="table-badge" class="table-badge hidden"></div>
 </div>
 
@@ -974,7 +977,7 @@
 <footer>
   <div class="fname">O'Mba'p Lounge</div>
   <div>Mini Prix Bastos, Yaoundé</div>
-  <div>+237 686 868 630 · contact@ombaplounge.org</div>
+  <div><a href="tel:+237686868630">+237 686 868 630</a> · <a href="mailto:contact@ombaplounge.org">contact@ombaplounge.org</a></div>
   <div class="socials">Facebook · Instagram · TikTok — O'Mba'p Lounge</div>
   <div style="margin-top:10px;"><a href="mentions-legales.html" style="color:var(--cream-dim); font-size:12px; text-decoration:underline;">Mentions légales &amp; confidentialité</a></div>
 </footer>
