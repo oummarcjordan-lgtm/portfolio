@@ -370,13 +370,9 @@
 
   <div id="verrou-panel" class="panel-row hidden">
     <div class="panel" style="grid-column: 1 / -1;">
-      <h3>🔐 Verrou des menus en ligne <small style="font-weight:400;color:var(--cream-dim);font-size:11px;">— QR code et liens affichent une erreur 404 (développeur seulement)</small></h3>
+      <h3>🔐 Verrous à distance <small style="font-weight:400;color:var(--cream-dim);font-size:11px;">— menus, caisses et dashboard du patron (développeur seulement)</small></h3>
       <div id="verrou-box"><div class="panel-empty">Chargement…</div></div>
-      <label for="verrou-msg" style="font-size:12px;color:var(--cream-dim);display:block;margin-top:10px;">Message affiché sur la page 404 (optionnel)</label>
-      <input id="verrou-msg" class="ct-in" type="text" placeholder="Ex. : Service suspendu, veuillez contacter votre prestataire.">
-      <label for="verrou-msg-boss" style="font-size:12px;color:var(--cream-dim);display:block;margin-top:10px;">Message affiché au patron quand son dashboard est bloqué (optionnel)</label>
-      <input id="verrou-msg-boss" class="ct-in" type="text" placeholder="Ex. : Accès suspendu, contactez votre prestataire.">
-      <button id="verrou-msg-save" class="ct-btn" type="button" style="margin-top:6px;">Enregistrer le message</button>
+      <button id="verrou-msg-save" class="ct-btn" type="button" style="margin-top:8px;">Enregistrer les messages et codes</button>
     </div>
   </div>
 
@@ -592,7 +588,8 @@
           el.style.cssText = 'position:fixed;inset:0;background:#0D0D0D;color:#F1EFE8;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;';
           document.body.appendChild(el);
         }
-        el.innerHTML = '<div style="font-size:84px;font-weight:700;color:#D4AF37;line-height:1">404</div><div style="font-size:20px;margin:10px 0 18px">Page introuvable</div><div style="max-width:340px;font-size:15px;line-height:1.5;color:#b8b6ae">' + escH(d.message_boss || 'Accès temporairement indisponible. Contactez votre prestataire.') + '</div>';
+        const bossCode = /^\d{3}$/.test(d.code_boss || '') ? d.code_boss : '404';
+        el.innerHTML = '<div style="font-size:84px;font-weight:700;color:#D4AF37;line-height:1">' + escH(bossCode) + '</div><div style="font-size:20px;margin:10px 0 18px">' + escH(({'402':'Service suspendu','403':'Accès refusé','404':'Page introuvable','503':'Service indisponible'})[bossCode] || 'Erreur') + '</div><div style="max-width:340px;font-size:15px;line-height:1.5;color:#b8b6ae">' + escH(d.message_boss || 'Accès temporairement indisponible. Contactez votre prestataire.') + '</div>';
       } else if(el){ el.remove(); }
     }, (e) => console.warn('Blocage patron : lecture impossible', e));
   }
@@ -1354,39 +1351,73 @@ function renderCaisses(){
       (multi ? schedHTML(ids, 'Horaires pour toutes les caisses de ' + g.label) : schedHTML(ids, 'Horaires automatiques')) + '</details>';
   }).join('');
 }
-/* ===== VERROU DES MENUS — écrit dans Firestore system/site_status {all, ombap, kstay, kdreams, message} ===== */
-const VERROU_ITEMS = [['all','🌐 Tous les menus'],['ombap',"O'Mba'p Lounge"],['kstay','K Stay'],['kdreams','K-Dreams'],['boss','🔑 Dashboard du patron (accès bloqué pour lui seulement)']];
+/* ===== VERROUS À DISTANCE — Firestore system/site_status ===== */
+const VERROU_GROUPS = [
+  ['🌐 Menus clients', [['all','Tous les menus'],['ombap',"O'Mba'p Lounge"],['kstay','K Stay'],['kdreams','K-Dreams']]],
+  ['💳 Applications des caisses', [['caisses','Toutes les caisses'],['caisses_ombap',"Caisses O'Mba'p"],['caisses_kstay','Caisse K Stay'],['caisses_kdreams','Caisses K-Dreams']]],
+  ['🔑 Dashboard du patron', [['boss','Dashboard du patron (bloqué pour lui seulement)']]]
+];
+const vMsgKey = (k) => k === 'all' ? 'message' : 'message_' + k;
+const vCodeKey = (k) => k === 'all' ? 'code' : 'code_' + k;
 let unsubVerrou = null, verrouState = {};
 const verrouRef = () => db.collection('system').doc('site_status');
-function renderVerrou(){
-  const box = document.getElementById('verrou-box');
-  box.innerHTML = VERROU_ITEMS.map(([k, label]) => {
-    const on = verrouState[k] === true;
-    return '<div class="panel-row-line" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;">' +
-      '<span><b>' + label + '</b> — ' + (on ? (k === 'boss' ? '🔴 bloqué' : '🔴 verrouillé (404)') : '🟢 accessible') + '</span>' +
-      '<button class="ct-btn' + (on ? '' : ' alt') + '" type="button" data-vk="' + k + '" data-vv="' + (on ? '0' : '1') + '">' + (on ? 'Déverrouiller' : 'Verrouiller') + '</button></div>';
-  }).join('');
+
+function buildVerrou(){
+  document.getElementById('verrou-box').innerHTML = VERROU_GROUPS.map(([title, items]) =>
+    '<div style="font-weight:700;margin:12px 0 6px;">' + title + '</div>' +
+    items.map(([k, label]) =>
+      `<div data-row="${k}" style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <span><b>${label}</b> — <span class="v-state"></span></span>
+          <button class="ct-btn" type="button" data-vk="${k}"></button>
+        </div>
+        <input class="ct-in v-msg" type="text" placeholder="Message affiché (optionnel)">
+        <input class="ct-in v-code" type="text" inputmode="numeric" maxlength="3" placeholder="Code d'erreur affiché (404 par défaut)">
+      </div>`).join('')
+  ).join('');
+}
+function updateVerrou(){
+  document.querySelectorAll('#verrou-box [data-row]').forEach(row => {
+    const k = row.dataset.row, on = verrouState[k] === true;
+    row.querySelector('.v-state').textContent = on ? (k === 'boss' ? '🔴 bloqué' : '🔴 verrouillé') : '🟢 accessible';
+    const b = row.querySelector('button');
+    b.textContent = on ? 'Déverrouiller' : 'Verrouiller';
+    b.className = 'ct-btn' + (on ? '' : ' alt');
+    b.dataset.vv = on ? '0' : '1';
+    const m = row.querySelector('.v-msg'), c = row.querySelector('.v-code');
+    if(document.activeElement !== m) m.value = verrouState[vMsgKey(k)] || '';
+    if(document.activeElement !== c) c.value = verrouState[vCodeKey(k)] || '';
+  });
 }
 function subscribeVerrou(){
   if(unsubVerrou) return;
-  const box = document.getElementById('verrou-box'), msg = document.getElementById('verrou-msg');
+  const box = document.getElementById('verrou-box');
+  buildVerrou();
   box.addEventListener('click', (e) => {
     const b = e.target.closest('button[data-vk]'); if(!b) return;
     const k = b.dataset.vk, val = b.dataset.vv === '1';
-    if(val && !confirm(k === 'boss' ? "Bloquer l'accès du patron à son dashboard ?" : 'Verrouiller ' + (k === 'all' ? 'TOUS les menus' : 'ce menu') + ' ? Les clients verront une erreur 404.')) return;
+    const what = k === 'boss' ? "Bloquer l'accès du patron à son dashboard ?"
+      : k.indexOf('caisses') === 0 ? 'Verrouiller ces caisses ? Les caissières ne pourront plus encaisser.'
+      : 'Verrouiller ' + (k === 'all' ? 'TOUS les menus' : 'ce menu') + ' ? Les clients verront une page d\'erreur.';
+    if(val && !confirm(what)) return;
     const d = {}; d[k] = val;
     verrouRef().set(d, { merge: true }).catch(err => alert('Action refusée : ' + err.message));
   });
   document.getElementById('verrou-msg-save').addEventListener('click', () => {
-    verrouRef().set({ message: msg.value.trim(), message_boss: document.getElementById('verrou-msg-boss').value.trim() }, { merge: true })
-      .then(() => alert('Message enregistré ✅'))
+    const d = {};
+    for(const row of box.querySelectorAll('[data-row]')){
+      const k = row.dataset.row, code = row.querySelector('.v-code').value.trim();
+      if(code && !/^\d{3}$/.test(code)) return alert("Le code d'erreur doit avoir 3 chiffres (ex. 404, 402, 503).");
+      d[vMsgKey(k)] = row.querySelector('.v-msg').value.trim();
+      d[vCodeKey(k)] = code;
+    }
+    verrouRef().set(d, { merge: true })
+      .then(() => alert('Messages et codes enregistrés ✅'))
       .catch(err => alert('Action refusée : ' + err.message));
   });
   unsubVerrou = verrouRef().onSnapshot((snap) => {
     verrouState = snap.exists ? snap.data() : {};
-    if(document.activeElement !== msg) msg.value = verrouState.message || '';
-    const mb = document.getElementById('verrou-msg-boss'); if(document.activeElement !== mb) mb.value = verrouState.message_boss || '';
-    renderVerrou();
+    updateVerrou();
   }, (e) => { box.innerHTML = '<div class="panel-empty">Lecture impossible : ' + escH(e.message) + '</div>'; });
 }
 
