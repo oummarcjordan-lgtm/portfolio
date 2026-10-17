@@ -368,6 +368,16 @@
     </div>
   </div>
 
+  <div id="verrou-panel" class="panel-row hidden">
+    <div class="panel" style="grid-column: 1 / -1;">
+      <h3>🔐 Verrou des menus en ligne <small style="font-weight:400;color:var(--cream-dim);font-size:11px;">— QR code et liens affichent une erreur 404 (développeur seulement)</small></h3>
+      <div id="verrou-box"><div class="panel-empty">Chargement…</div></div>
+      <label for="verrou-msg" style="font-size:12px;color:var(--cream-dim);display:block;margin-top:10px;">Message affiché sur la page 404 (optionnel)</label>
+      <input id="verrou-msg" class="ct-in" type="text" placeholder="Ex. : Service suspendu, veuillez contacter votre prestataire.">
+      <button id="verrou-msg-save" class="ct-btn" type="button" style="margin-top:6px;">Enregistrer le message</button>
+    </div>
+  </div>
+
   <div id="connections-panel" class="panel-row hidden">
     <div class="panel">
       <h3>🔑 Connexions comptes (caisse + admin) <small style="font-weight:400; color:var(--cream-dim); font-size:11px;">— jour et établissement sélectionnés ci-dessus</small></h3>
@@ -645,6 +655,8 @@
     subscribeRapports();
     if(currentAdminName === 'Marc (Développeur)'){
       document.getElementById('connections-panel').classList.remove('hidden');
+      document.getElementById('verrou-panel').classList.remove('hidden');
+      subscribeVerrou();
       subscribeConnectionsLog();
       subscribeVisitsLog();
     }
@@ -1320,6 +1332,41 @@ function renderCaisses(){
       (multi ? schedHTML(ids, 'Horaires pour toutes les caisses de ' + g.label) : schedHTML(ids, 'Horaires automatiques')) + '</details>';
   }).join('');
 }
+/* ===== VERROU DES MENUS — écrit dans Firestore system/site_status {all, ombap, kstay, kdreams, message} ===== */
+const VERROU_ITEMS = [['all','🌐 Tous les menus'],['ombap',"O'Mba'p Lounge"],['kstay','K Stay'],['kdreams','K-Dreams']];
+let unsubVerrou = null, verrouState = {};
+const verrouRef = () => db.collection('system').doc('site_status');
+function renderVerrou(){
+  const box = document.getElementById('verrou-box');
+  box.innerHTML = VERROU_ITEMS.map(([k, label]) => {
+    const on = verrouState[k] === true;
+    return '<div class="panel-row-line" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;">' +
+      '<span><b>' + label + '</b> — ' + (on ? '🔴 verrouillé (404)' : '🟢 accessible') + '</span>' +
+      '<button class="ct-btn' + (on ? '' : ' alt') + '" type="button" data-vk="' + k + '" data-vv="' + (on ? '0' : '1') + '">' + (on ? 'Déverrouiller' : 'Verrouiller') + '</button></div>';
+  }).join('');
+}
+function subscribeVerrou(){
+  if(unsubVerrou) return;
+  const box = document.getElementById('verrou-box'), msg = document.getElementById('verrou-msg');
+  box.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-vk]'); if(!b) return;
+    const k = b.dataset.vk, val = b.dataset.vv === '1';
+    if(val && !confirm('Verrouiller ' + (k === 'all' ? 'TOUS les menus' : 'ce menu') + ' ? Les clients verront une erreur 404.')) return;
+    const d = {}; d[k] = val;
+    verrouRef().set(d, { merge: true }).catch(err => alert('Action refusée : ' + err.message));
+  });
+  document.getElementById('verrou-msg-save').addEventListener('click', () => {
+    verrouRef().set({ message: msg.value.trim() }, { merge: true })
+      .then(() => alert('Message enregistré ✅'))
+      .catch(err => alert('Action refusée : ' + err.message));
+  });
+  unsubVerrou = verrouRef().onSnapshot((snap) => {
+    verrouState = snap.exists ? snap.data() : {};
+    if(document.activeElement !== msg) msg.value = verrouState.message || '';
+    renderVerrou();
+  }, (e) => { box.innerHTML = '<div class="panel-empty">Lecture impossible : ' + escH(e.message) + '</div>'; });
+}
+
 function subscribeCaisses(){
   if(unsubCaisses) return;
   const box = document.getElementById('caisses-box'), msg = document.getElementById('caisses-msg');
