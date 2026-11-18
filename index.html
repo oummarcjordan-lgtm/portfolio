@@ -525,6 +525,40 @@
   .sinfo{color:var(--cream-dim);font-size:12px;margin-top:10px;min-height:16px;}
   .srch-hide{display:none !important;}
   .noresult{color:var(--cream-dim);text-align:center;padding:40px 16px;line-height:1.5;}
+
+  /* ---------- MÉDIAS : vidéo de présentation, galerie des chambres, illustrations ---------- */
+  .presentation{max-width:760px; margin:0 auto; padding:18px 18px 0;}
+  .pres-card{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#000;}
+  .pres-card video{display:block; width:100%; aspect-ratio:16/9; background:#000;}
+  .pres-cap{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:11px 14px; background:var(--bg-raised);}
+  .pres-cap b{font-family:'Fraunces', serif; font-weight:600; font-size:16px; color:var(--cream);}
+  .pres-cap span{font-size:12px; color:var(--cream-dim); white-space:nowrap;}
+
+  .gallery{display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+    margin:0 -18px 20px; padding:0 18px 4px; scrollbar-width:none;}
+  .gallery::-webkit-scrollbar{display:none;}
+  .g-item{flex:0 0 76%; max-width:330px; scroll-snap-align:start; padding:0; border:1px solid var(--line);
+    border-radius:12px; overflow:hidden; background:var(--bg-raised); cursor:zoom-in; aspect-ratio:16/10; font:inherit;}
+  .g-item img{display:block; width:100%; height:100%; object-fit:cover;}
+  .g-item:focus-visible, .lb button:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+  .banner{margin:0 0 18px; border:1px solid var(--line); border-radius:12px; overflow:hidden; aspect-ratio:16/9; background:var(--bg-raised);}
+  .banner img{display:block; width:100%; height:100%; object-fit:cover;}
+  .sub-label + .banner{margin-top:0;}
+
+  body.is-searching .media, body.is-searching .presentation{display:none !important;}
+
+  .lb{position:fixed; inset:0; z-index:1000; background:rgba(8,14,15,0.95); display:flex; align-items:center; justify-content:center; padding:16px;}
+  .lb[hidden]{display:none;}
+  .lb img{max-width:100%; max-height:80vh; border-radius:8px; display:block;}
+  .lb button{position:absolute; background:rgba(244,237,225,0.12); color:var(--cream); border:1px solid var(--line);
+    width:46px; height:46px; border-radius:50%; font-size:26px; line-height:1; cursor:pointer;}
+  .lb .lb-x{top:14px; right:14px; font-size:20px;}
+  .lb .lb-p{left:10px; top:50%; transform:translateY(-50%);}
+  .lb .lb-n{right:10px; top:50%; transform:translateY(-50%);}
+  .lb .lb-c{position:absolute; bottom:18px; left:0; right:0; text-align:center; font-size:13px; color:var(--cream-dim);}
+  @media (prefers-reduced-motion: no-preference){ .gallery{scroll-behavior:smooth;} }
+
   /* Anti détection auto Safari iPhone (numéros/prix en bleu) */
   a[href^="tel"], a[href^="mailto"], a[x-apple-data-detectors]{color:inherit !important;text-decoration:none !important;font:inherit !important}
 </style>
@@ -578,19 +612,38 @@
   </nav>
 </div>
 
+<div class="presentation" id="presentation">
+  <div class="pres-card">
+    <video controls playsinline preload="none" poster="ombap-web/video/ombap-poster.jpg" aria-label="Vidéo de présentation d'O'Mba'p Lounge">
+      <source src="ombap-web/video/ombap-presentation.mp4" type="video/mp4">
+      Votre navigateur ne peut pas lire cette vidéo.
+    </video>
+    <div class="pres-cap"><b>Découvrir O'Mba'p</b><span>2 min 52 · environ 15 Mo</span></div>
+  </div>
+</div>
+
 <main>
 
   <section id="hebergement">
     <div class="sec-head"><h2>Hébergement</h2></div>
-    <div class="item" data-lodging="nuit"><div class="item-row"><span class="name-group"><span class="name">Chambre Standard</span><span class="avail-badge avail-yes">Disponible</span></span><span class="price">35 000 FCFA</span></div><div class="desc">Prix par nuit.</div></div>
-    <div class="item" data-lodging="nuit"><div class="item-row"><span class="name-group"><span class="name">Chambre VIP</span><span class="avail-badge avail-yes">Disponible</span></span><span class="price">50 000 FCFA</span></div><div class="desc">Prix par nuit.</div></div>
-    <div class="item" data-lodging="passage"><div class="item-row"><span class="name-group"><span class="name">Sieste</span><span class="avail-badge avail-yes">Disponible</span></span><span class="price">20 000 FCFA</span></div><div class="desc">Forfait passage (quelques heures).</div></div>
+    <div class="media gallery" aria-label="Photos de nos chambres">
+      <button type="button" class="g-item" aria-label="Agrandir la photo : Lit double aux draps blancs et coussins motifs wax, fauteuils près de la fenêtre"><img src="ombap-web/images/chambre-lit.jpg" alt="Lit double aux draps blancs et coussins motifs wax, fauteuils près de la fenêtre" loading="lazy" decoding="async" width="1280" height="720"></button>
+      <button type="button" class="g-item" aria-label="Agrandir la photo : Bureau en bois, télévision murale éclairée, bouilloire et mini-réfrigérateur"><img src="ombap-web/images/chambre-bureau.jpg" alt="Bureau en bois, télévision murale éclairée, bouilloire et mini-réfrigérateur" loading="lazy" decoding="async" width="1280" height="720"></button>
+      <button type="button" class="g-item" aria-label="Agrandir la photo : Coin salon avec deux fauteuils et une table ronde"><img src="ombap-web/images/chambre-fauteuils.jpg" alt="Coin salon avec deux fauteuils et une table ronde" loading="lazy" decoding="async" width="1280" height="720"></button>
+      <button type="button" class="g-item" aria-label="Agrandir la photo : Salon de la chambre, plafond à éclairage bleu et rideaux"><img src="ombap-web/images/chambre-plafond.jpg" alt="Salon de la chambre, plafond à éclairage bleu et rideaux" loading="lazy" decoding="async" width="1280" height="720"></button>
+      <button type="button" class="g-item" aria-label="Agrandir la photo : Douche vitrée et porte de la chambre 101"><img src="ombap-web/images/chambre-douche.jpg" alt="Douche vitrée et porte de la chambre 101" loading="lazy" decoding="async" width="1280" height="720"></button>
+      <button type="button" class="g-item" aria-label="Agrandir la photo : Lit, serviettes roulées et table de chevet avec téléphone"><img src="ombap-web/images/chambre-lit-2.jpg" alt="Lit, serviettes roulées et table de chevet avec téléphone" loading="lazy" decoding="async" width="1280" height="720"></button>
+      <button type="button" class="g-item" aria-label="Agrandir la photo : Télévision murale et climatiseur"><img src="ombap-web/images/chambre-tele.jpg" alt="Télévision murale et climatiseur" loading="lazy" decoding="async" width="1280" height="720"></button>
+    </div>
+    <div class="item" data-lodging="nuit"><div class="item-row"><span class="name-group"><span class="name">Chambre (nuitée)</span><span class="avail-badge avail-yes">Disponible</span></span><span class="price">45 000 FCFA</span></div><div class="desc">Prix par nuit.</div></div>
+    <div class="item" data-lodging="nuit"><div class="item-row"><span class="name-group"><span class="name">Grande chambre</span><span class="avail-badge avail-yes">Disponible</span></span><span class="price">60 000 FCFA</span></div><div class="desc">Prix par nuit.</div></div>
+    <div class="item" data-lodging="passage"><div class="item-row"><span class="name-group"><span class="name">Sieste (2 h)</span><span class="avail-badge avail-yes">Disponible</span></span><span class="price">20 000 FCFA</span></div><div class="desc">Forfait passage de 2 heures.</div></div>
   </section>
 
   <section id="petit-dejeuner">
     <div class="sec-head"><h2>Petit déjeuner</h2></div>
-    <div class="sub-label">Chaque jour de 7h à 12h</div>
-    <div class="item"><div class="item-row"><span class="name">Signature O'Mba'P</span><span class="price">3 500 FCFA</span></div><div class="desc">Spécialité de la maison. Beignet de farine ou de maïs · Haricot rouge · Foie de bœuf · Peau de bœuf · Bouilli · Jus au choix.</div></div>
+    <div class="sub-label">Petit déjeuner complet à partir de 3 500 FCFA · chaque jour de 7h à 12h</div>
+    <div class="item"><div class="item-row"><span class="name">Signature O'Mba'P</span><span class="price">3 500 FCFA</span></div><div class="desc">Spécialité de la maison. Beignet de farine ou de maïs, au choix · Haricots rouges · Foie de bœuf · Peau de bœuf · Bouilli · Boisson au choix.</div></div>
     <div class="item"><div class="item-row"><span class="name">Lever du Soleil Therapy</span><span class="price">4 500 FCFA</span></div><div class="desc">Salade fraîcheur · Œuf au plat, à la coque ou omelette · Pain (complet et baguette) · Boisson chaude · Jus de fruit · Eau.</div></div>
     <div class="item"><div class="item-row"><span class="name">Matin Bonheur</span><span class="price">5 500 FCFA</span></div><div class="desc">Salade de crudités · Œuf à la coque ou au plat · Omelette · Viennoiserie · Jus naturel ou assiette de fruits · Yaourt · Boisson chaude · Eau.</div></div>
     <div class="item"><div class="item-row"><span class="name">Petit Régal Américain</span><span class="price">6 500 FCFA</span></div><div class="desc">Omelette garnie au choix · Boisson chaude · Céréales · Lait liquide · Assiette de fruits de saison · Confiture · Yaourt · Nems à la viande.</div></div>
@@ -839,6 +892,7 @@
 
   <section id="cocktails">
     <div class="sec-head"><h2>Nos cocktails</h2></div>
+    <figure class="media banner" style="margin-left:0;margin-right:0"><img src="ombap-web/boissons/cocktail-1.jpg" alt="Cocktail orangé servi au bar, avec une tranche d'orange" loading="lazy" decoding="async" width="848" height="478"></figure>
     <div class="sub-label">Cocktails alcoolisés</div>
     <div class="item"><div class="item-row"><span class="name">Margarita</span><span class="price">7 000 FCFA</span></div><div class="desc">Tequila, Cointreau, citron vert.</div></div>
     <div class="item"><div class="item-row"><span class="name">Tequila Sunrise</span><span class="price">7 000 FCFA</span></div><div class="desc">Tequila, orange, grenadine.</div></div>
@@ -1041,6 +1095,7 @@
     <div class="item"><div class="item-row"><span class="name">Thé citron / gingembre / menthe</span><span class="price">2 500 FCFA</span></div></div>
     <div class="item"><div class="item-row"><span class="name">Cappuccino</span><span class="price">3 000 FCFA</span></div></div>
     <div class="sub-label">Chicha</div>
+    <figure class="media banner" style="margin-left:0;margin-right:0"><img src="ombap-web/boissons/chicha.jpg" alt="Étagère de chichas du bar" loading="lazy" decoding="async" width="848" height="478"></figure>
     <div class="item"><div class="item-row"><span class="name">Love 66</span><span class="price">10 000 FCFA</span></div></div>
     <div class="item"><div class="item-row"><span class="name">Menthe</span><span class="price">10 000 FCFA</span></div></div>
     <div class="item"><div class="item-row"><span class="name">Hawaï</span><span class="price">10 000 FCFA</span></div></div>
@@ -1618,6 +1673,7 @@ window.addEventListener('load', function(){
 
   function apply(){
     const raw = input.value.trim(), qq = norm(raw); let shown = 0;
+    document.body.classList.toggle('is-searching', !!qq);
     units.forEach(u=>{ const ok = match(qq,u.hay); u.ok = ok; u.el.classList.toggle('srch-hide', !ok); if(ok) shown++; });
     sections.forEach(S=>{
       S.subs.forEach(sb=> sb.el.classList.toggle('srch-hide', !sb.units.some(u=>u.ok)));
@@ -1646,6 +1702,49 @@ window.addEventListener('load', function(){
   clr.addEventListener('click', ()=>{ input.value=''; apply(); input.focus(); });
   document.getElementById('goSearch').addEventListener('click', ()=>{ setTimeout(()=>input.focus({preventScroll:true}), 350); });
   buildChips();
+})();
+</script>
+<script>
+/* ---- Galerie des chambres : agrandir une photo ---- */
+(function(){
+  var btns = [].slice.call(document.querySelectorAll('.g-item'));
+  if(!btns.length) return;
+  var box = document.createElement('div');
+  box.className = 'lb'; box.hidden = true;
+  box.setAttribute('role','dialog'); box.setAttribute('aria-modal','true'); box.setAttribute('aria-label','Photo agrandie');
+  box.innerHTML = '<button type="button" class="lb-x" aria-label="Fermer">&#10005;</button>'
+    + '<button type="button" class="lb-p" aria-label="Photo précédente">&#8249;</button>'
+    + '<img alt="">'
+    + '<button type="button" class="lb-n" aria-label="Photo suivante">&#8250;</button>'
+    + '<div class="lb-c" aria-live="polite"></div>';
+  document.body.appendChild(box);
+  var img = box.querySelector('img'), cnt = box.querySelector('.lb-c'), cur = 0, opener = null;
+  function show(i){
+    cur = (i + btns.length) % btns.length;
+    var im = btns[cur].querySelector('img');
+    img.src = im.src; img.alt = im.alt;
+    cnt.textContent = (cur+1) + ' / ' + btns.length;
+  }
+  function open(i){ opener = btns[i]; show(i); box.hidden = false; document.body.style.overflow = 'hidden'; box.querySelector('.lb-x').focus(); }
+  function close(){ box.hidden = true; document.body.style.overflow = ''; if(opener) opener.focus(); }
+  btns.forEach(function(b,i){ b.addEventListener('click', function(){ open(i); }); });
+  box.querySelector('.lb-x').addEventListener('click', close);
+  box.querySelector('.lb-p').addEventListener('click', function(){ show(cur-1); });
+  box.querySelector('.lb-n').addEventListener('click', function(){ show(cur+1); });
+  box.addEventListener('click', function(e){ if(e.target === box) close(); });
+  document.addEventListener('keydown', function(e){
+    if(box.hidden) return;
+    if(e.key === 'Escape') close();
+    else if(e.key === 'ArrowLeft') show(cur-1);
+    else if(e.key === 'ArrowRight') show(cur+1);
+  });
+  var x0 = null;
+  box.addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; }, {passive:true});
+  box.addEventListener('touchend', function(e){
+    if(x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if(Math.abs(dx) > 50) show(cur + (dx < 0 ? 1 : -1));
+  }, {passive:true});
 })();
 </script>
 </body>
