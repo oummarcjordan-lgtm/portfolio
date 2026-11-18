@@ -534,10 +534,10 @@
   .pres-cap b{font-family:'Fraunces', serif; font-weight:600; font-size:16px; color:var(--cream);}
   .pres-cap span{font-size:12px; color:var(--cream-dim); white-space:nowrap;}
 
-  .gallery{display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+  .gallery{display:flex; gap:10px; overflow-x:auto; -webkit-overflow-scrolling:touch;
     margin:0 -18px 20px; padding:0 18px 4px; scrollbar-width:none;}
   .gallery::-webkit-scrollbar{display:none;}
-  .g-item{flex:0 0 76%; max-width:330px; scroll-snap-align:start; padding:0; border:1px solid var(--line);
+  .g-item{flex:0 0 76%; max-width:330px; padding:0; border:1px solid var(--line);
     border-radius:12px; overflow:hidden; background:var(--bg-raised); cursor:zoom-in; aspect-ratio:16/10; font:inherit;}
   .g-item img{display:block; width:100%; height:100%; object-fit:cover;}
   .g-item:focus-visible, .lb button:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
@@ -557,7 +557,6 @@
   .lb .lb-p{left:10px; top:50%; transform:translateY(-50%);}
   .lb .lb-n{right:10px; top:50%; transform:translateY(-50%);}
   .lb .lb-c{position:absolute; bottom:18px; left:0; right:0; text-align:center; font-size:13px; color:var(--cream-dim);}
-  @media (prefers-reduced-motion: no-preference){ .gallery{scroll-behavior:smooth;} }
 
   /* Anti détection auto Safari iPhone (numéros/prix en bleu) */
   a[href^="tel"], a[href^="mailto"], a[x-apple-data-detectors]{color:inherit !important;text-decoration:none !important;font:inherit !important}
@@ -1745,6 +1744,67 @@ window.addEventListener('load', function(){
     var dx = e.changedTouches[0].clientX - x0; x0 = null;
     if(Math.abs(dx) > 50) show(cur + (dx < 0 ? 1 : -1));
   }, {passive:true});
+})();
+</script>
+<script>
+/* ---- Vidéo de présentation : s'arrête automatiquement quand on la fait défiler hors de l'écran ---- */
+(function(){
+  var v = document.querySelector('.pres-card video');
+  if(!v) return;
+  function inFullscreen(){ return !!(document.fullscreenElement || document.webkitFullscreenElement || v.webkitDisplayingFullscreen); }
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.intersectionRatio < 0.25 && !v.paused && !inFullscreen()) v.pause();
+      });
+    }, {threshold:[0, 0.25, 0.5]}).observe(v);
+  }
+  document.addEventListener('visibilitychange', function(){ if(document.hidden && !v.paused) v.pause(); });
+})();
+
+/* ---- Galerie des chambres : défilement automatique en boucle, de droite à gauche ---- */
+(function(){
+  var g = document.querySelector('.gallery');
+  if(!g) return;
+  var items = [].slice.call(g.querySelectorAll('.g-item'));
+  if(items.length < 2) return;
+  items.forEach(function(it){
+    var c = it.cloneNode(true);
+    c.setAttribute('aria-hidden','true'); c.tabIndex = -1;
+    c.addEventListener('click', function(){ it.click(); });
+    g.appendChild(c);
+  });
+  var SPEED = 40;                 /* pixels par seconde */
+  var pos = 0, last = null, paused = false, visible = true, timer = null;
+  function setW(){ return g.children[items.length].offsetLeft - g.children[0].offsetLeft; }
+  function lightboxOpen(){ return document.body.style.overflow === 'hidden'; }
+  function tick(t){
+    if(last !== null && !paused && visible && !document.hidden && !lightboxOpen()){
+      pos += SPEED * (t - last) / 1000;
+      var w = setW();
+      if(w > 0 && pos >= w) pos -= w;
+      g.scrollLeft = pos;
+    }
+    last = t;
+    requestAnimationFrame(tick);
+  }
+  function hold(){ paused = true; clearTimeout(timer); }
+  function release(){
+    clearTimeout(timer);
+    timer = setTimeout(function(){ pos = g.scrollLeft; paused = false; }, 2500);
+  }
+  ['touchstart','mousedown','wheel'].forEach(function(ev){ g.addEventListener(ev, hold, {passive:true}); });
+  ['touchend','touchcancel','mouseup','mouseleave'].forEach(function(ev){ g.addEventListener(ev, release, {passive:true}); });
+  g.addEventListener('wheel', release, {passive:true});
+  g.addEventListener('scroll', function(){
+    if(!paused) return;                       /* l'utilisateur fait défiler lui-même : on boucle aussi */
+    var w = setW();
+    if(w > 0 && g.scrollLeft >= w) g.scrollLeft -= w;
+  }, {passive:true});
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(en){ visible = en[0].isIntersecting; }, {threshold:0.1}).observe(g);
+  }
+  requestAnimationFrame(tick);
 })();
 </script>
 </body>
