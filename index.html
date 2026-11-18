@@ -349,7 +349,12 @@
     font-size:13px;
   }
   footer .fname{color:var(--gold); font-family:'Fraunces',serif; font-size:18px; margin-bottom:8px;}
-  footer .socials{margin-top:10px; font-size:12px; letter-spacing:0.05em;}
+  footer .socials{margin-top:14px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;}
+  footer .socials a{color:var(--gold); border:1px solid var(--gold); border-radius:999px; padding:9px 18px; font-size:13px;
+    letter-spacing:0.05em; text-decoration:none; min-height:40px; display:inline-flex; align-items:center;}
+  footer .socials a:active{background:var(--gold); color:#000;}
+  footer .credit{margin-top:18px; font-size:12px; color:var(--cream-dim);}
+  footer .credit a{color:var(--gold); text-decoration:underline;}
 
   /* WhatsApp floating button */
   .wa-float{
@@ -1115,8 +1120,13 @@
   <div class="fname">O'Mba'p Lounge</div>
   <div>Mini Prix Bastos, Yaoundé</div>
   <div><a href="tel:+237686868630">+237 686 868 630</a> · <a href="mailto:contact@ombaplounge.org">contact@ombaplounge.org</a></div>
-  <div class="socials">Facebook · Instagram · TikTok — O'Mba'p Lounge</div>
+  <div class="socials" aria-label="Nos réseaux sociaux">
+    <a href="https://www.facebook.com/profile.php?id=61583803454536" target="_blank" rel="noopener noreferrer" aria-label="O'Mba'p Lounge sur Facebook">Facebook</a>
+    <a href="https://www.instagram.com/ombaplounge" target="_blank" rel="noopener noreferrer" aria-label="O'Mba'p Lounge sur Instagram">Instagram</a>
+    <a href="https://www.tiktok.com/@ombap.lounge.2" target="_blank" rel="noopener noreferrer" aria-label="O'Mba'p Lounge sur TikTok">TikTok</a>
+  </div>
   <div style="margin-top:10px;"><a href="mentions-legales.html" style="color:var(--cream-dim); font-size:12px; text-decoration:underline;">Mentions légales &amp; confidentialité</a></div>
+  <div class="credit">Site créé par <a href="https://wa.me/237688578748?text=Bonjour%2C%20j%27ai%20vu%20votre%20travail%20sur%20le%20site%20d%27O%27Mba%27p%20Lounge%20et%20j%27aimerais%20en%20savoir%20plus." target="_blank" rel="noopener noreferrer">OMJ Web Développement</a></div>
 </footer>
 
 
