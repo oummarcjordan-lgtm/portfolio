@@ -553,6 +553,20 @@
   .banner.tall{aspect-ratio:auto;}
   .banner.tall img{height:auto; object-fit:contain;}
   .sub-label + .banner.tall{margin-top:0;}
+  /* Bandeau événement (disparaît tout seul après la date) */
+  .event-banner{max-width:760px; margin:0 auto; padding:18px 18px 0;}
+  .event-card{border:1px solid var(--gold); border-radius:12px; overflow:hidden; background:var(--bg-raised);}
+  .event-flyer{display:block; width:100%; padding:0; border:0; background:#000; cursor:zoom-in;}
+  .event-flyer img{display:block; width:100%; height:auto;}
+  .event-info{padding:14px 14px 16px; text-align:center;}
+  .event-info b{display:block; font-family:'Fraunces', serif; font-weight:600; font-size:16px; color:var(--gold); margin-bottom:4px;}
+  .event-info p{margin:0 0 12px; font-size:13px; color:var(--cream-dim);}
+  .event-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+  .event-actions a{display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:0 20px; border-radius:999px;
+    border:1px solid var(--gold); color:var(--gold); text-decoration:none; font-size:14px;}
+  .event-actions a.primary{background:var(--gold); color:#000; font-weight:600;}
+  body.is-searching .event-banner{display:none !important;}
+
 
   body.is-searching .media, body.is-searching .presentation{display:none !important;}
 
@@ -583,6 +597,20 @@
   <div class="tag">Restaurant · <a href="#hebergement" class="tag-link">Hébergement</a> · Rooftop · Grill · Pizzeria</div>
   <div class="loc">Mini Prix Bastos, Yaoundé — <a href="tel:+237686868630">+237 686 868 630</a></div>
   <div id="table-badge" class="table-badge hidden"></div>
+</div>
+
+<div class="event-banner" id="evenement-brunch" data-until="2026-11-30" hidden>
+  <div class="event-card">
+    <button type="button" class="event-flyer" aria-label="Agrandir l'affiche du brunch du dimanche 29 novembre"><img src="ombap-web/brunch-29-novembre.jpg" alt="Affiche : Brunch dimanche 29 novembre dès 12h à O'Mba'p Lounge. Adulte 15 000 FCFA, enfant de 4 à 7 ans 7 000 FCFA, enfant de 0 à 3 ans gratuit." width="900" height="1125" decoding="async"></button>
+    <div class="event-info">
+      <b>Brunch · dimanche 29 novembre · dès 12h</b>
+      <p>Adulte 15 000 FCFA · Enfant 4 à 7 ans 7 000 FCFA · Enfant 0 à 3 ans gratuit</p>
+      <div class="event-actions">
+        <a class="primary" href="tel:+237686868630">Réserver par téléphone</a>
+        <a href="https://wa.me/237686868630?text=Bonjour%2C%20je%20souhaite%20r%C3%A9server%20pour%20le%20brunch%20du%20dimanche%2029%20novembre." target="_blank" rel="noopener noreferrer">Réserver sur WhatsApp</a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="searchbox" id="recherche">
@@ -625,7 +653,7 @@
       <source src="ombap-web/ombap-presentation.mp4" type="video/mp4">
       Votre navigateur ne peut pas lire cette vidéo.
     </video>
-    <div class="pres-cap"><b>Découvrir O'Mba'p</b><span>2 min 52 · environ 15 Mo</span></div>
+    <div class="pres-cap"><b>Découvrir O'Mba'p</b><span>2 min 40 · environ 14 Mo</span></div>
   </div>
 </div>
 
@@ -1823,6 +1851,27 @@ window.addEventListener('load', function(){
     new IntersectionObserver(function(en){ visible = en[0].isIntersecting; }, {threshold:0.1}).observe(g);
   }
   requestAnimationFrame(tick);
+})();
+</script>
+<script>
+/* ---- Bandeau événement : visible jusqu'à la date indiquée, puis disparaît tout seul ---- */
+(function(){
+  var ev = document.getElementById('evenement-brunch');
+  if(!ev) return;
+  var until = new Date(ev.getAttribute('data-until') + 'T00:00:00');
+  if(new Date() >= until){ ev.remove(); return; }
+  ev.hidden = false;
+  var btn = ev.querySelector('.event-flyer'), src = btn.querySelector('img');
+  btn.addEventListener('click', function(){
+    var o = document.createElement('div');
+    o.className = 'lb'; o.setAttribute('role','dialog'); o.setAttribute('aria-modal','true'); o.setAttribute('aria-label','Affiche agrandie');
+    o.innerHTML = '<button type="button" class="lb-x" aria-label="Fermer">&#10005;</button><img alt="">';
+    o.querySelector('img').src = src.src; o.querySelector('img').alt = src.alt;
+    function close(){ o.remove(); document.body.style.overflow = ''; btn.focus(); }
+    o.addEventListener('click', close);
+    document.addEventListener('keydown', function k(e){ if(e.key === 'Escape'){ document.removeEventListener('keydown', k); if(o.parentNode) close(); } });
+    document.body.appendChild(o); document.body.style.overflow = 'hidden'; o.querySelector('.lb-x').focus();
+  });
 })();
 </script>
 </body>
