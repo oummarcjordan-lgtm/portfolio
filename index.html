@@ -599,6 +599,15 @@
   <div id="table-badge" class="table-badge hidden"></div>
 </div>
 
+<div class="searchbox" id="recherche">
+  <div class="sfield">
+    <input id="q" type="search" placeholder="Rechercher (pizza, bière, whisky…)" autocomplete="off" enterkeyhint="search">
+    <button class="sclear" id="qClear" type="button" aria-label="Effacer">&#10005;</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="sinfo" id="sinfo"></div>
+</div>
+
 <div class="event-banner" id="evenement-brunch" data-until="2026-11-30" hidden>
   <div class="event-card">
     <button type="button" class="event-flyer" aria-label="Agrandir l'affiche du brunch du dimanche 29 novembre"><img src="ombap-web/brunch-29-novembre.jpg" alt="Affiche : Brunch dimanche 29 novembre dès 12h à O'Mba'p Lounge. Adulte 15 000 FCFA, enfant de 4 à 7 ans 7 000 FCFA, enfant de 0 à 3 ans gratuit." width="900" height="1125" decoding="async"></button>
@@ -611,15 +620,6 @@
       </div>
     </div>
   </div>
-</div>
-
-<div class="searchbox" id="recherche">
-  <div class="sfield">
-    <input id="q" type="search" placeholder="Rechercher (pizza, bière, whisky…)" autocomplete="off" enterkeyhint="search">
-    <button class="sclear" id="qClear" type="button" aria-label="Effacer">&#10005;</button>
-  </div>
-  <div class="chips" id="chips"></div>
-  <div class="sinfo" id="sinfo"></div>
 </div>
 
 <div class="catnav-wrap">
@@ -1651,7 +1651,11 @@
     sections.forEach((sec, i) => { if (sec && sec.offsetParent !== null && sec.offsetTop <= y) idx = i; });
     links.forEach((l, i) => l.classList.toggle('active', i === idx));
     const active = links[idx];
-    if (active) active.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+    if (active) {
+      /* défilement horizontal du menu seulement : ne fait plus bouger la page */
+      const nav = document.getElementById('catnav');
+      nav.scrollTo({left: active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2, behavior:'smooth'});
+    }
   };
   window.addEventListener('scroll', setActive, {passive:true});
   setActive();
